@@ -1,0 +1,994 @@
+---
+import { musicTracks } from '@/data/music'
+import { getLangFromLocale } from '@/i18n/lang'
+
+const currentLang = getLangFromLocale(Astro.currentLocale)
+const labels = currentLang === 'en'
+  ? {
+      region: 'Music player',
+      playlist: 'Playlist',
+      play: 'Play',
+      pause: 'Pause',
+      previous: 'Previous track',
+      next: 'Next track',
+      shuffle: 'Shuffle',
+      volume: 'Volume',
+      progress: 'Playback progress',
+      loadError: 'This track failed to load',
+      close: 'Close player',
+    }
+  : {
+      region: '音乐播放器',
+      playlist: '歌单',
+      play: '播放',
+      pause: '暂停',
+      previous: '上一首',
+      next: '下一首',
+      shuffle: '随机播放',
+      volume: '音量',
+      progress: '播放进度',
+      loadError: '这首曲目加载失败',
+      close: '关闭播放器',
+    }
+---
+
+<!-- Floating music player panel, opened from the music note in the
+     site-actions group. Pure view layer over the MusicEngine singleton, so
+     its state always matches whatever playback is running site-wide. -->
+<div
+  id="music-panel-modal"
+  class="mp-modal mp-hidden"
+  role="dialog"
+  aria-modal="true"
+  aria-hidden="true"
+  aria-label={labels.region}
+  data-tracks={JSON.stringify(musicTracks)}
+  data-label-play={labels.play}
+  data-label-pause={labels.pause}
+  data-label-progress={labels.progress}
+  data-label-error={labels.loadError}
+  data-label-close={labels.close}
+>
+  <div class="mp-card">
+    <div class="mp-head">
+      <button id="music-panel-close" class="mp-close" type="button" aria-label={labels.close}>
+        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+          <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="mp-body">
+      <div class="mp-hero">
+        <div class="mp-cover" aria-hidden="true">
+          <span class="mp-cover-char">{musicTracks[0]?.title.charAt(0) ?? ''}</span>
+        </div>
+        <div class="mp-meta">
+          <div class="mp-title">{musicTracks[0]?.title}</div>
+          <div class="mp-artist">{musicTracks[0]?.artist}</div>
+        </div>
+      </div>
+
+      <div class="mp-times">
+        <span class="mp-current">0:00</span>
+        <span class="mp-total">{musicTracks.length > 0 ? '0:00' : ''}</span>
+      </div>
+      <button class="mp-progress" type="button" aria-label={labels.progress} aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <span class="mp-progress-fill" />
+      </button>
+
+      <div class="mp-buttons">
+        <button class="mp-btn mp-shuffle" type="button" aria-label={labels.shuffle} aria-pressed="false">
+          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+            <path d="M3 6.5h3.1c1.4 0 2.7.8 3.4 2.1l3.9 6.8c.7 1.3 2 2.1 3.4 2.1H18M3 17.5h3.4c1.2 0 2.3-.6 3-1.5M21 6.5h-1.7c-1.2 0-2.3.6-3 1.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M18.5 3.5 21.5 6.5 18.5 9.5M18.5 14.5 21.5 17.5 18.5 20.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+        <button class="mp-btn mp-prev" type="button" aria-label={labels.previous}>
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+            <path d="M7 5.5v13M19 6.2a1 1 0 0 0-1.55-.83l-8.2 6.3a1 1 0 0 0 0 1.66l8.2 6.3A1 1 0 0 0 19 18.8Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+        <button class="mp-btn mp-play" type="button" aria-label={labels.play}>
+          <svg class="mp-icon-play" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+            <path d="M8.2 5.6a1 1 0 0 1 1.52-.85l9 5.55a1 1 0 0 1 0 1.7l-9 5.55a1 1 0 0 1-1.52-.85Z" fill="currentColor" />
+          </svg>
+          <svg class="mp-icon-pause" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+            <path d="M8.5 5.5h2.2v13H8.5zM13.3 5.5h2.2v13h-2.2z" fill="currentColor" />
+          </svg>
+        </button>
+        <button class="mp-btn mp-next" type="button" aria-label={labels.next}>
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+            <path d="M17 5.5v13M5 6.2a1 1 0 0 1 1.55-.83l8.2 6.3a1 1 0 0 1 0 1.66l-8.2 6.3A1 1 0 0 1 5 18.8Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="mp-volume">
+        <svg class="mp-vol-icon" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+          <path d="M4 9.5h3L11.5 5.5v13L7 14.5H4Z" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" />
+          <path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a7.6 7.6 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+        <button class="mp-volume-slider" type="button" aria-label={labels.volume} aria-valuemin="0" aria-valuemax="100" aria-valuenow="70">
+          <span class="mp-volume-fill" />
+        </button>
+      </div>
+
+      <div class="mp-section">{labels.playlist}</div>
+      <ol class="mp-playlist">
+        {
+          musicTracks.map((track, i) => (
+            <li>
+              <button class="mp-row" type="button" data-index={i}>
+                <span class="mp-row-index">
+                  <span class="mp-row-num">{i + 1}</span>
+                  <span class="mp-row-eq" aria-hidden="true">
+                    <span /><span /><span />
+                  </span>
+                </span>
+                <span class="mp-row-art" aria-hidden="true">{track.title.charAt(0)}</span>
+                <span class="mp-row-main">
+                  <span class="mp-row-title">{track.title}</span>
+                  <span class="mp-row-artist">{track.artist}</span>
+                </span>
+              </button>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Monochrome Apple look: only gray/white/black, tuned per scheme. */
+  #music-panel-modal {
+    --mp-accent: #1d1d1f;
+    --mp-accent-hover: #48484a;
+    --mp-on-accent: #f5f5f7;
+    --mp-ink: oklch(var(--un-preset-theme-colors-primary));
+    --mp-ink-soft: oklch(var(--un-preset-theme-colors-secondary) / 0.62);
+    --mp-hairline: oklch(var(--un-preset-theme-colors-secondary) / 0.14);
+    --mp-art: linear-gradient(140deg, oklch(0.56 0.004 298), oklch(0.26 0.006 298));
+    --mp-font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Hiragino Sans GB', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  html.dark #music-panel-modal {
+    --mp-accent: #f5f5f7;
+    --mp-accent-hover: #d4d4d6;
+    --mp-on-accent: #1d1d1f;
+    --mp-hairline: oklch(var(--un-preset-theme-colors-secondary) / 0.22);
+    --mp-art: linear-gradient(140deg, oklch(0.68 0.004 298), oklch(0.36 0.006 298));
+  }
+
+  .mp-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: oklch(0 0 0 / 0.42);
+    -webkit-backdrop-filter: blur(0.4rem) saturate(1.1);
+    backdrop-filter: blur(0.4rem) saturate(1.1);
+  }
+
+  /* Id-level specificity so it always wins over .mp-modal's display:flex. */
+  #music-panel-modal.mp-hidden {
+    display: none;
+  }
+
+  .mp-card {
+    display: flex;
+    flex-direction: column;
+    width: min(23rem, 100%);
+    max-height: min(82vh, 40rem);
+    overflow: hidden;
+    border: 1px solid var(--mp-hairline);
+    border-radius: 1.25rem;
+    background: oklch(var(--un-preset-theme-colors-background));
+    box-shadow: 0 1.6rem 3.6rem oklch(0 0 0 / 0.3);
+    font-family: var(--mp-font);
+  }
+
+  .mp-head {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0.7rem 0.7rem 0;
+  }
+
+  .mp-close {
+    display: grid;
+    width: 1.7rem;
+    height: 1.7rem;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: oklch(var(--un-preset-theme-colors-secondary) / 0.08);
+    color: var(--mp-ink-soft);
+    cursor: pointer;
+    transition: background-color 140ms ease, color 140ms ease;
+  }
+
+  .mp-close:hover,
+  .mp-close:focus-visible {
+    background: oklch(var(--un-preset-theme-colors-secondary) / 0.15);
+    color: var(--mp-ink);
+  }
+
+  .mp-body {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 0 1rem 1rem;
+    overflow-y: auto;
+  }
+
+  .mp-hero {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin: 0.15rem 0 1rem;
+  }
+
+  .mp-cover {
+    display: grid;
+    flex-shrink: 0;
+    width: 4.6rem;
+    height: 4.6rem;
+    place-items: center;
+    border-radius: 0.8rem;
+    background: var(--mp-art);
+    box-shadow: 0 0.5rem 1.1rem oklch(var(--un-preset-theme-colors-secondary) / 0.24);
+  }
+
+  .mp-cover-char {
+    font-size: 1.7rem;
+    font-weight: 700;
+    line-height: 1;
+    color: oklch(1 0 0 / 0.94);
+    text-shadow: 0 0.1rem 0.35rem oklch(0 0 0 / 0.25);
+    user-select: none;
+  }
+
+  .mp-meta {
+    min-width: 0;
+  }
+
+  .mp-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--mp-ink);
+    overflow-wrap: anywhere;
+  }
+
+  .mp-artist {
+    margin-top: 0.15rem;
+    font-size: 0.82rem;
+    color: var(--mp-ink-soft);
+  }
+
+  .mp-times {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+    font-size: 0.68rem;
+    color: var(--mp-ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .mp-progress {
+    display: block;
+    width: 100%;
+    height: 0.5rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+  }
+
+  .mp-progress::before {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 3px;
+    border-radius: 999px;
+    background: var(--mp-hairline);
+  }
+
+  .mp-progress-fill {
+    display: block;
+    width: 100%;
+    height: 3px;
+    margin-top: -3px;
+    border-radius: 999px;
+    background: var(--mp-accent);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 100ms linear;
+  }
+
+  .mp-modal.mp-seeking .mp-progress-fill {
+    transition: none;
+  }
+
+  .mp-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.4rem;
+    margin: 0.8rem 0 0.2rem;
+  }
+
+  .mp-btn {
+    display: grid;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--mp-ink);
+    cursor: pointer;
+    transition: color 140ms ease, transform 140ms ease, background-color 140ms ease;
+  }
+
+  .mp-btn:hover,
+  .mp-btn:focus-visible {
+    color: var(--mp-accent);
+  }
+
+  .mp-btn:active {
+    transform: scale(0.92);
+  }
+
+  .mp-btn:focus-visible {
+    outline: 1px solid oklch(var(--un-preset-theme-colors-secondary) / 0.6);
+    outline-offset: 3px;
+  }
+
+  .mp-prev,
+  .mp-next {
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+
+  .mp-shuffle {
+    position: relative;
+    width: 2rem;
+    height: 2rem;
+    color: var(--mp-ink-soft);
+  }
+
+  .mp-shuffle.is-on {
+    color: var(--mp-ink);
+  }
+
+  .mp-shuffle.is-on::after {
+    content: '';
+    position: absolute;
+    bottom: 0.1rem;
+    left: 50%;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--mp-ink);
+    transform: translateX(-50%);
+  }
+
+  .mp-play {
+    width: 2.7rem;
+    height: 2.7rem;
+    background: var(--mp-accent);
+    color: var(--mp-on-accent);
+    box-shadow: 0 0.5rem 1.2rem oklch(0 0 0 / 0.26);
+  }
+
+  .mp-play:hover,
+  .mp-play:focus-visible {
+    background: var(--mp-accent-hover);
+    color: var(--mp-on-accent);
+  }
+
+  .mp-icon-play {
+    transform: translateX(1px);
+  }
+
+  .mp-icon-pause {
+    display: none;
+  }
+
+  .mp-modal.mp-playing .mp-icon-play {
+    display: none;
+  }
+
+  .mp-modal.mp-playing .mp-icon-pause {
+    display: block;
+  }
+
+  .mp-modal.mp-error .mp-current {
+    font-size: 0.66rem;
+    color: var(--mp-ink-soft);
+  }
+
+  .mp-volume {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0.7rem 0.2rem 0.1rem;
+  }
+
+  .mp-vol-icon {
+    flex-shrink: 0;
+    color: var(--mp-ink-soft);
+  }
+
+  .mp-volume-slider {
+    flex: 1;
+    height: 0.9rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+  }
+
+  .mp-volume-slider::before {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 3px;
+    border-radius: 999px;
+    background: var(--mp-hairline);
+  }
+
+  .mp-volume-fill {
+    position: relative;
+    display: block;
+    width: 70%;
+    height: 3px;
+    margin-top: -3px;
+    border-radius: 999px;
+    background: var(--mp-accent);
+    transition: width 100ms linear;
+  }
+
+  .mp-volume-fill::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--mp-accent);
+    box-shadow: 0 0.1rem 0.3rem oklch(0 0 0 / 0.25);
+    transform: translateY(-50%);
+  }
+
+  .mp-modal.mp-vol-seeking .mp-volume-fill {
+    transition: none;
+  }
+
+  .mp-section {
+    margin: 0.8rem 0 0.2rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--mp-ink-soft);
+  }
+
+  .mp-playlist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .mp-row {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    width: 100%;
+    height: 46px;
+    padding: 0 0.5rem;
+    border: 0;
+    border-radius: 0.6rem;
+    background: transparent;
+    color: var(--mp-ink);
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    transition: background-color 140ms ease;
+  }
+
+  @media (hover: hover) {
+    .mp-row:hover {
+      background: oklch(var(--un-preset-theme-colors-secondary) / 0.06);
+    }
+
+    html.dark .mp-row:hover {
+      background: oklch(var(--un-preset-theme-colors-secondary) / 0.1);
+    }
+  }
+
+  .mp-row:focus-visible {
+    outline: 1px solid oklch(var(--un-preset-theme-colors-secondary) / 0.6);
+    outline-offset: -1px;
+  }
+
+  .mp-row.is-active {
+    background: oklch(var(--un-preset-theme-colors-secondary) / 0.08);
+  }
+
+  html.dark .mp-row.is-active {
+    background: oklch(var(--un-preset-theme-colors-secondary) / 0.14);
+  }
+
+  .mp-row-index {
+    position: relative;
+    display: grid;
+    flex: 0 0 1.3rem;
+    height: 1.3rem;
+    place-items: center;
+  }
+
+  .mp-row-num {
+    font-size: 0.76rem;
+    color: var(--mp-ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .mp-row-eq {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 2px;
+    height: 0.75rem;
+    margin: auto 0;
+  }
+
+  .mp-row-eq span {
+    width: 2.5px;
+    border-radius: 1px;
+    background: var(--mp-accent);
+    transform: scaleY(0.4);
+  }
+
+  .mp-row-eq span:nth-child(1) { height: 45%; }
+  .mp-row-eq span:nth-child(2) { height: 85%; }
+  .mp-row-eq span:nth-child(3) { height: 60%; }
+
+  .mp-row.is-active .mp-row-num {
+    display: none;
+  }
+
+  .mp-row.is-active .mp-row-eq {
+    display: flex;
+  }
+
+  .mp-row.is-active.is-playing-row .mp-row-eq span {
+    animation: mp-eq-bounce 1s ease-in-out infinite;
+  }
+
+  .mp-row.is-active.is-playing-row .mp-row-eq span:nth-child(1) { animation-delay: -0.4s; }
+  .mp-row.is-active.is-playing-row .mp-row-eq span:nth-child(2) { animation-delay: -0.1s; }
+  .mp-row.is-active.is-playing-row .mp-row-eq span:nth-child(3) { animation-delay: -0.65s; }
+
+  @keyframes mp-eq-bounce {
+    0%, 100% { transform: scaleY(0.4); }
+    50% { transform: scaleY(1); }
+  }
+
+  .mp-row-art {
+    display: grid;
+    flex: 0 0 auto;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    border-radius: 0.3rem;
+    background: var(--mp-art);
+    color: oklch(1 0 0 / 0.94);
+    font-size: 0.8rem;
+    font-weight: 700;
+    user-select: none;
+  }
+
+  .mp-row-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    min-width: 0;
+  }
+
+  .mp-row-title {
+    overflow: hidden;
+    font-size: 0.84rem;
+    line-height: 1.3;
+    color: var(--mp-ink);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mp-row.is-active .mp-row-title {
+    color: var(--mp-ink);
+    font-weight: 600;
+  }
+
+  .mp-row-artist {
+    overflow: hidden;
+    font-size: 0.7rem;
+    line-height: 1.3;
+    color: var(--mp-ink-soft);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mp-close,
+    .mp-btn,
+    .mp-row,
+    .mp-progress-fill,
+    .mp-volume-fill {
+      transition: none;
+    }
+
+    .mp-row.is-active.is-playing-row .mp-row-eq span {
+      animation: none;
+      transform: scaleY(1);
+    }
+  }
+</style>
+
+<script is:inline data-astro-rerun>
+(function () {
+  // View-layer controller for the floating panel; the Howl lives in the
+  // site-wide MusicEngine singleton. Open/close state resets on ClientRouter
+  // swaps (the markup is re-created hidden), which is fine for a transient
+  // overlay — playback itself never stops.
+  //
+  // This inline script re-runs after every swap (data-astro-rerun). All
+  // session-scoped listeners are registered once inside the first closure;
+  // later runs only rebind the current modal through the singleton.
+  const existing = window.__musicPanelController
+  if (existing) {
+    existing.init()
+    return
+  }
+
+  let modal = null
+  let els = {}
+  let tracks = []
+  let seeking = false
+  let volSeeking = false
+  let timer = null
+
+  function formatTime(seconds) {
+    if (!Number.isFinite(seconds) || seconds < 0) {
+      return '0:00'
+    }
+    const minutes = Math.floor(seconds / 60)
+    const rest = Math.floor(seconds % 60)
+    return `${minutes}:${String(rest).padStart(2, '0')}`
+  }
+
+  function isOpen() {
+    return !!modal && !modal.classList.contains('mp-hidden')
+  }
+
+  function update() {
+    const e = window.__quietMusic
+    if (!modal || !e) {
+      return
+    }
+    const playing = e.isPlaying()
+    const failed = e.isFailed()
+    const duration = e.duration()
+    const current = e.current()
+    const progress = duration > 0 ? current / duration : 0
+    const index = e.index()
+    modal.classList.toggle('mp-playing', playing)
+    modal.classList.toggle('mp-error', failed)
+    modal.classList.toggle('mp-seeking', seeking)
+    modal.classList.toggle('mp-vol-seeking', volSeeking)
+    els.play.setAttribute('aria-label', playing ? modal.dataset.labelPause || '' : modal.dataset.labelPlay || '')
+    els.current.textContent = failed ? modal.dataset.labelError || '' : formatTime(current)
+    els.total.textContent = formatTime(duration)
+    els.fill.style.transform = `scaleX(${progress})`
+    els.progress.setAttribute('aria-valuenow', String(Math.round(progress * 100)))
+    els.progress.setAttribute('aria-valuetext', `${formatTime(current)} / ${formatTime(duration)}`)
+    const shuffleOn = typeof e.isShuffle === 'function' && e.isShuffle()
+    els.shuffle.classList.toggle('is-on', shuffleOn)
+    els.shuffle.setAttribute('aria-pressed', shuffleOn ? 'true' : 'false')
+    const vol = typeof e.volume === 'function' ? e.volume() : 0.7
+    els.volFill.style.width = `${Math.round(vol * 100)}%`
+    els.volSlider.setAttribute('aria-valuenow', String(Math.round(vol * 100)))
+    els.rows.forEach((row, i) => {
+      row.classList.toggle('is-active', i === index)
+      row.classList.toggle('is-playing-row', i === index && playing)
+    })
+  }
+
+  function startTimer() {
+    stopTimer()
+    timer = setInterval(() => {
+      if (!seeking) {
+        update()
+      }
+    }, 250)
+  }
+
+  function stopTimer() {
+    if (timer) {
+      clearInterval(timer)
+      timer = null
+    }
+  }
+
+  function renderNowPlaying() {
+    const e = window.__quietMusic
+    const track = e ? tracks[e.index()] : tracks[0]
+    if (!track || !modal) {
+      return
+    }
+    els.title.textContent = track.title
+    els.artist.textContent = track.artist
+    els.coverChar.textContent = (track.title || '').trim().charAt(0) || '♪'
+  }
+
+  function openPanel() {
+    if (!modal) {
+      return
+    }
+    modal.classList.remove('mp-hidden')
+    modal.setAttribute('aria-hidden', 'false')
+    const toggleBtn = document.getElementById('music-toggle')
+    if (toggleBtn) {
+      if (!toggleBtn.dataset.originalLabel) {
+        toggleBtn.dataset.originalLabel = toggleBtn.getAttribute('aria-label') || ''
+      }
+      toggleBtn.setAttribute('aria-expanded', 'true')
+      toggleBtn.setAttribute('aria-label', modal.dataset.labelClose || '')
+    }
+    renderNowPlaying()
+    update()
+    startTimer()
+  }
+
+  function closePanel() {
+    if (!modal) {
+      return
+    }
+    // Return focus before hiding: closing via the inner ✕ or Escape would
+    // otherwise leave focus inside an aria-hidden container (browser warning).
+    const toggleBtn = document.getElementById('music-toggle')
+    if (toggleBtn && modal.contains(document.activeElement)) {
+      toggleBtn.focus()
+    }
+    modal.classList.add('mp-hidden')
+    modal.setAttribute('aria-hidden', 'true')
+    if (toggleBtn) {
+      toggleBtn.setAttribute('aria-expanded', 'false')
+      if (toggleBtn.dataset.originalLabel) {
+        toggleBtn.setAttribute('aria-label', toggleBtn.dataset.originalLabel)
+      }
+    }
+    stopTimer()
+  }
+
+  function togglePanel() {
+    if (isOpen()) {
+      closePanel()
+    }
+    else {
+      openPanel()
+    }
+  }
+
+  function startTrack(nextIndex) {
+    const e = window.__quietMusic
+    if (e) {
+      e.playTrack(nextIndex)
+    }
+  }
+
+  function togglePlay() {
+    const e = window.__quietMusic
+    if (e) {
+      e.toggle()
+    }
+  }
+
+  function seekFromClientX(clientX) {
+    const e = window.__quietMusic
+    const duration = e ? e.duration() : 0
+    if (!e || duration <= 0) {
+      return
+    }
+    const rect = els.progress.getBoundingClientRect()
+    const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+    e.seekTo(percent * duration)
+    update()
+  }
+
+  function setVolumeFromClientX(clientX) {
+    const e = window.__quietMusic
+    if (!e || typeof e.setVolume !== 'function') {
+      return
+    }
+    const rect = els.volSlider.getBoundingClientRect()
+    const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+    e.setVolume(percent)
+    update()
+  }
+
+  function bind() {
+    els = {
+      title: modal.querySelector('.mp-title'),
+      artist: modal.querySelector('.mp-artist'),
+      coverChar: modal.querySelector('.mp-cover-char'),
+      current: modal.querySelector('.mp-current'),
+      total: modal.querySelector('.mp-total'),
+      progress: modal.querySelector('.mp-progress'),
+      fill: modal.querySelector('.mp-progress-fill'),
+      shuffle: modal.querySelector('.mp-shuffle'),
+      play: modal.querySelector('.mp-play'),
+      prev: modal.querySelector('.mp-prev'),
+      next: modal.querySelector('.mp-next'),
+      volSlider: modal.querySelector('.mp-volume-slider'),
+      volFill: modal.querySelector('.mp-volume-fill'),
+      rows: Array.prototype.slice.call(modal.querySelectorAll('.mp-row')),
+    }
+
+    els.shuffle.addEventListener('click', () => {
+      const e = window.__quietMusic
+      if (e && typeof e.toggleShuffle === 'function') {
+        e.toggleShuffle()
+      }
+      update()
+    })
+    els.play.addEventListener('click', togglePlay)
+    els.prev.addEventListener('click', () => {
+      const e = window.__quietMusic
+      startTrack((e ? e.index() : 0) - 1)
+    })
+    els.next.addEventListener('click', () => {
+      const e = window.__quietMusic
+      startTrack((e ? e.index() : 0) + 1)
+    })
+    els.rows.forEach((row, i) => {
+      row.addEventListener('click', () => {
+        const e = window.__quietMusic
+        if (e && i === e.index() && !e.isFailed()) {
+          togglePlay()
+          return
+        }
+        startTrack(i)
+      })
+    })
+
+    els.progress.addEventListener('click', (event) => {
+      if (!seeking) {
+        seekFromClientX(event.clientX)
+      }
+    })
+    els.progress.addEventListener('pointerdown', (event) => {
+      const e = window.__quietMusic
+      if (!e || e.duration() <= 0) {
+        return
+      }
+      seeking = true
+      if (els.progress.setPointerCapture) {
+        els.progress.setPointerCapture(event.pointerId)
+      }
+      seekFromClientX(event.clientX)
+      event.preventDefault()
+    })
+    els.progress.addEventListener('pointermove', (event) => {
+      if (seeking) {
+        seekFromClientX(event.clientX)
+        event.preventDefault()
+      }
+    })
+    const finishSeeking = function (event) {
+      if (!seeking) {
+        return
+      }
+      seekFromClientX(event.clientX)
+      seeking = false
+      if (els.progress.releasePointerCapture) {
+        els.progress.releasePointerCapture(event.pointerId)
+      }
+      update()
+    }
+    els.progress.addEventListener('pointerup', finishSeeking)
+    els.progress.addEventListener('pointercancel', finishSeeking)
+
+    els.volSlider.addEventListener('click', (event) => {
+      if (!volSeeking) {
+        setVolumeFromClientX(event.clientX)
+      }
+    })
+    els.volSlider.addEventListener('pointerdown', (event) => {
+      volSeeking = true
+      if (els.volSlider.setPointerCapture) {
+        els.volSlider.setPointerCapture(event.pointerId)
+      }
+      setVolumeFromClientX(event.clientX)
+      event.preventDefault()
+    })
+    els.volSlider.addEventListener('pointermove', (event) => {
+      if (volSeeking) {
+        setVolumeFromClientX(event.clientX)
+        event.preventDefault()
+      }
+    })
+    const finishVolSeeking = function (event) {
+      if (!volSeeking) {
+        return
+      }
+      setVolumeFromClientX(event.clientX)
+      volSeeking = false
+      if (els.volSlider.releasePointerCapture) {
+        els.volSlider.releasePointerCapture(event.pointerId)
+      }
+      update()
+    }
+    els.volSlider.addEventListener('pointerup', finishVolSeeking)
+    els.volSlider.addEventListener('pointercancel', finishVolSeeking)
+  }
+
+  function init() {
+    const next = document.getElementById('music-panel-modal')
+    if (!next) {
+      return
+    }
+    if (next !== modal) {
+      modal = next
+      tracks = JSON.parse(modal.dataset.tracks || '[]')
+      bind()
+    }
+  }
+
+  function cleanup() {
+    stopTimer()
+    modal = null
+    els = {}
+  }
+
+  // The tool-group button, close ✕, backdrop and Escape all drive the panel.
+  document.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)) {
+      return
+    }
+    if (event.target.closest('#music-toggle')) {
+      togglePanel()
+      return
+    }
+    if (!isOpen()) {
+      return
+    }
+    if (event.target.closest('#music-panel-close') || event.target === modal) {
+      closePanel()
+    }
+  })
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && isOpen()) {
+      closePanel()
+    }
+  })
+
+  window.__musicPanelController = { init, cleanup }
+  document.addEventListener('astro:page-load', init)
+  document.addEventListener('astro:before-swap', cleanup)
+  init()
+})()
+</script>

@@ -1,0 +1,404 @@
+---
+import type { Language } from '@/i18n/config'
+import SearchIcon from '@/assets/icons/search-icon.svg'
+import { base, defaultLocale } from '@/config'
+import { ui } from '@/i18n/ui'
+
+// Search modal. The trigger button lives in Button.astro (tool-button group);
+// this component renders only the modal + the client-side search script.
+interface Props {
+  lang: Language
+}
+
+const { lang } = Astro.props
+const currentUI = ui[lang] ?? ui.zh
+
+// Path to this language's search index JSON (built by search-index.json.ts)
+const indexURL = lang === defaultLocale
+  ? `${base}/search-index.json`
+  : `${base}/${lang}/search-index.json`
+---
+
+<!-- Search modal (hidden until triggered) -->
+<div
+  id="search-modal"
+  class="fixed inset-0 z-[1000] hidden items-start justify-center bg-background/80 p-4 pt-[10vh] backdrop-blur-sm"
+  aria-hidden="true"
+  role="dialog"
+  aria-modal="true"
+  aria-label={currentUI.search}
+  data-index-url={indexURL}
+  data-post-path-template={lang === defaultLocale ? `${base}/posts/` : `${base}/${lang}/posts/`}
+  data-empty-message={currentUI.searchEmpty}
+>
+  <div class="max-w-[36rem] w-full overflow-hidden border border-secondary/15 rounded-lg bg-background shadow-lg">
+    <!-- Input row -->
+    <div class="flex items-center gap-3 border-b border-secondary/10 px-4 py-3">
+      <SearchIcon class="h-4 w-4 shrink-0 c-secondary/60" aria-hidden="true" fill="currentColor" />
+      <input
+        id="search-input"
+        type="search"
+        class="flex-1 bg-transparent text-4 c-secondary outline-none placeholder:c-secondary/40"
+        placeholder={currentUI.searchPlaceholder}
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button
+        id="search-close"
+        class="shrink-0 border border-secondary/15 rounded px-1.5 py-0.5 text-3 c-secondary/60 hover:c-primary"
+        aria-label="Close"
+      >
+        Esc
+      </button>
+    </div>
+    <!-- Results list -->
+    <ul
+      id="search-results"
+      class="max-h-[50vh] overflow-y-auto p-2"
+    >
+      <!-- results injected here -->
+    </ul>
+  </div>
+</div>
+
+<style>
+  /* Entrance micro-animation: replays automatically each time the modal
+     switches from display:none to flex. Exit stays instant — Escape should
+     feel immediate. */
+  #search-modal:not(.hidden) {
+    animation: search-backdrop-in 150ms ease-out;
+  }
+  #search-modal:not(.hidden) > div {
+    animation: search-panel-in 180ms cubic-bezier(0, 0, 0.2, 1);
+  }
+  @keyframes search-backdrop-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes search-panel-in {
+    from {
+      opacity: 0;
+      transform: translateY(-6px) scale(0.98);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #search-modal:not(.hidden),
+    #search-modal:not(.hidden) > div {
+      animation: none;
+    }
+  }
+
+  /* Result item styling */
+  #search-results :global(li) {
+    list-style: none;
+  }
+  #search-results :global(a) {
+    display: block;
+    padding: 0.6rem 0.8rem;
+    border-radius: 0.375rem;
+    transition: background-color 0.12s ease-out;
+  }
+  #search-results :global(a:hover),
+  #search-results :global(a.active) {
+    background-color: oklch(var(--un-preset-theme-colors-highlight) / 0.4);
+  }
+  #search-results :global(.sr-title) {
+    font-size: 1.05rem;
+    color: oklch(var(--un-preset-theme-colors-primary));
+  }
+  #search-results :global(.sr-desc) {
+    font-size: 0.85rem;
+    color: oklch(var(--un-preset-theme-colors-secondary) / 0.7);
+    margin-top: 0.2rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #search-results :global(.sr-meta) {
+    font-size: 0.75rem;
+    color: oklch(var(--un-preset-theme-colors-secondary) / 0.5);
+    margin-top: 0.2rem;
+  }
+</style>
+
+<script>
+// Client-side search: fetch the per-language index once, filter on input.
+// Keyboard: "/" to open, "Esc" to close, arrows to move, Enter to open.
+//
+// This is a bundled module script, so it executes exactly once per session —
+// unlike the previous inline script, which Astro re-ran after every view
+// transition and which stacked duplicate input/click listeners on each swap.
+// Per-page element binding happens through astro:page-load with a dataset guard.
+const state = {
+  indexData: null as unknown[] | null, // cached search index
+  indexPromise: null as Promise<unknown[]> | null, // in-flight fetch
+  activeIndex: -1, // highlighted result index
+  indexURL: '',
+  postPathTpl: '',
+  emptyMsg: '',
+  debounceTimer: null as ReturnType<typeof setTimeout> | null,
+}
+
+function $(id: string) {
+  return document.getElementById(id)
+}
+
+function readModalConfig() {
+  const modal = $('search-modal')
+  if (!modal)
+    return false
+  const nextIndexURL = modal.dataset.indexUrl || ''
+  // Language switches swap in a modal pointing at another index — invalidate
+  // the cached results so search never mixes languages.
+  if (nextIndexURL !== state.indexURL) {
+    state.indexURL = nextIndexURL
+    state.indexData = null
+    state.indexPromise = null
+  }
+  state.postPathTpl = modal.dataset.postPathTemplate || ''
+  state.emptyMsg = modal.dataset.emptyMessage || ''
+  return Boolean(state.indexURL)
+}
+
+// Lazily fetch + cache the index; returns a Promise
+function loadIndex() {
+  if (state.indexData)
+    return Promise.resolve(state.indexData)
+  if (state.indexPromise)
+    return state.indexPromise
+  state.indexPromise = fetch(state.indexURL).then(r => r.json()).then((data: unknown[]) => {
+    state.indexData = data
+    return data
+  }).catch(() => {
+    state.indexData = []
+    return []
+  })
+  return state.indexPromise
+}
+
+interface SearchPost {
+  title?: string
+  description?: string
+  tags?: string[]
+  slug?: string
+  date?: string
+}
+
+function openModal() {
+  const modal = $('search-modal')
+  if (!modal)
+    return
+  // Read the current modal's config at open time: right after a language
+  // switch this element points at the other language's index, and binding
+  // may not have caught up yet.
+  readModalConfig()
+  modal.classList.remove('hidden')
+  modal.classList.add('flex')
+  modal.setAttribute('aria-hidden', 'false')
+  setTimeout(() => {
+    const input = $('search-input') as HTMLInputElement | null
+    if (input) {
+      input.value = ''
+      input.focus()
+    }
+  }, 0)
+  loadIndex()
+  renderResults([])
+}
+
+function closeModal() {
+  const modal = $('search-modal')
+  if (!modal)
+    return
+  if (state.debounceTimer) {
+    clearTimeout(state.debounceTimer)
+    state.debounceTimer = null
+  }
+  modal.classList.add('hidden')
+  modal.classList.remove('flex')
+  modal.setAttribute('aria-hidden', 'true')
+  state.activeIndex = -1
+}
+
+function isOpen() {
+  const modal = $('search-modal')
+  return modal && !modal.classList.contains('hidden')
+}
+
+// Simple case-insensitive substring scoring across title/tags/desc.
+// Returns -1 when no match, otherwise a relevance score (higher = better).
+function scorePost(post: SearchPost, query: string) {
+  if (!query)
+    return -1
+  const q = query.toLowerCase()
+  const title = (post.title || '').toLowerCase()
+  const desc = (post.description || '').toLowerCase()
+  const tags = (post.tags || []).join(' ').toLowerCase()
+  let best = -1
+  if (title.includes(q))
+    best = Math.max(best, 100 - title.indexOf(q))
+  if (tags.includes(q))
+    best = Math.max(best, 50)
+  if (desc.includes(q))
+    best = Math.max(best, 10)
+  return best
+}
+
+async function search(query: string) {
+  const data = await loadIndex()
+  if (!query.trim())
+    return []
+  const scored: { post: SearchPost, score: number }[] = []
+  for (const post of (data as SearchPost[])) {
+    const s = scorePost(post, query)
+    if (s >= 0)
+      scored.push({ post, score: s })
+  }
+  scored.sort((a, b) => b.score - a.score)
+  return scored.slice(0, 20).map(x => x.post)
+}
+
+function escapeHtml(s: unknown) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', '\'': '&#39;' })[c] || c)
+}
+
+function renderResults(results: SearchPost[]) {
+  const ul = $('search-results')
+  if (!ul)
+    return
+  state.activeIndex = results.length > 0 ? 0 : -1
+  if (results.length === 0) {
+    ul.innerHTML = `<li style="padding:1.2rem 0.8rem;color:oklch(var(--un-preset-theme-colors-secondary)/0.5);font-size:0.9rem;">${escapeHtml(state.emptyMsg)}</li>`
+    return
+  }
+  let html = ''
+  for (let i = 0; i < results.length; i++) {
+    const p = results[i]
+    const href = state.postPathTpl + encodeURIComponent(p.slug || '')
+    const tags = (p.tags || []).slice(0, 3).map(t => `#${escapeHtml(t)}`).join(' ')
+    html += `<li><a href="${href}" data-idx="${i}">`
+      + `<div class="sr-title">${escapeHtml(p.title)}</div>`
+      + `<div class="sr-desc">${escapeHtml(p.description || '')}</div>`
+      + `<div class="sr-meta">${escapeHtml(p.date)}${tags ? ` &middot; ${tags}` : ''}</div>`
+      + `</a></li>`
+  }
+  ul.innerHTML = html
+  updateActive()
+}
+
+function updateActive() {
+  const ul = $('search-results')
+  if (!ul)
+    return
+  const items = ul.querySelectorAll('a')
+  for (let i = 0; i < items.length; i++) {
+    if (i === state.activeIndex)
+      items[i].classList.add('active')
+    else items[i].classList.remove('active')
+  }
+  if (state.activeIndex >= 0 && items[state.activeIndex]) {
+    items[state.activeIndex].scrollIntoView({ block: 'nearest' })
+  }
+}
+
+function moveActive(delta: number) {
+  const ul = $('search-results')
+  if (!ul)
+    return
+  const count = ul.querySelectorAll('a').length
+  if (count === 0)
+    return
+  state.activeIndex = (state.activeIndex + delta + count) % count
+  updateActive()
+}
+
+function openActive() {
+  const ul = $('search-results')
+  if (!ul)
+    return
+  const link = ul.querySelectorAll('a')[state.activeIndex]
+  if (link) {
+    // Let the anchor's default navigation run (Astro ClientRouter intercepts it)
+    link.click()
+  }
+}
+
+// Debounced search on input
+function onInput(this: HTMLInputElement) {
+  const query = this.value
+  if (state.debounceTimer)
+    clearTimeout(state.debounceTimer)
+  state.debounceTimer = setTimeout(() => {
+    search(query).then(renderResults)
+  }, 80)
+}
+
+function isTypingField(el: EventTarget | null): boolean {
+  if (!el)
+    return false
+  const node = el as HTMLElement
+  const tag = node.tagName
+  return tag === 'INPUT' || tag === 'TEXTAREA' || node.isContentEditable === true
+}
+
+function onKeyDown(e: KeyboardEvent) {
+  if (!isOpen()) {
+    // "/" opens search (when not typing in another field)
+    if (e.key === '/' && !isTypingField(e.target)) {
+      e.preventDefault()
+      openModal()
+    }
+    return
+  }
+  switch (e.key) {
+    case 'Escape':
+      e.preventDefault()
+      closeModal()
+      break
+    case 'ArrowDown':
+      e.preventDefault()
+      moveActive(1)
+      break
+    case 'ArrowUp':
+      e.preventDefault()
+      moveActive(-1)
+      break
+    case 'Enter':
+      e.preventDefault()
+      openActive()
+      break
+  }
+}
+
+// Register global keydown listener exactly once per session.
+document.addEventListener('keydown', onKeyDown)
+
+function setup() {
+  const modal = $('search-modal')
+  if (!modal || modal.dataset.searchBound === 'true')
+    return
+  if (!readModalConfig())
+    return
+  modal.dataset.searchBound = 'true'
+
+  const trigger = $('search-trigger')
+  const closeBtn = $('search-close')
+  const input = $('search-input')
+
+  trigger?.addEventListener('click', openModal)
+  closeBtn?.addEventListener('click', closeModal)
+  input?.addEventListener('input', onInput)
+
+  // Click on backdrop (outside the panel) closes
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal)
+      closeModal()
+  })
+}
+
+// Re-bind per-page element listeners after each ClientRouter swap.
+document.addEventListener('astro:page-load', setup)
+setup()
+</script>

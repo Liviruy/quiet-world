@@ -1,0 +1,175 @@
+---
+// The embed stylesheet is imported by the post route instead of here: this
+// component is imported by Layout for every page, and a stylesheet import in it
+// is hoisted into the layout CSS even though the component only renders on
+// articles. See pages/[...lang]/posts/[slug].astro.
+---
+
+<script>
+const mediaObservers: IntersectionObserver[] = []
+
+function deferUntilVisible(elements: Element[], callback: () => void) {
+  if (elements.length === 0) {
+    return
+  }
+
+  if (!('IntersectionObserver' in window)) {
+    callback()
+    return
+  }
+
+  let observer: IntersectionObserver | null = null
+  observer = new IntersectionObserver((entries) => {
+    if (entries.some(entry => entry.isIntersecting)) {
+      // Disconnect first so repeated intersection events cannot start twice.
+      observer?.disconnect()
+      callback()
+    }
+  }, { rootMargin: '360px 0px' })
+
+  elements.forEach(element => observer.observe(element))
+  mediaObservers.push(observer)
+}
+
+// Initialize Mermaid diagrams
+async function setupMermaidEmbeds() {
+  const mermaids = document.querySelectorAll('pre.mermaid')
+  if (mermaids.length === 0) {
+    return
+  }
+
+  // Store original code for re-rendering
+  mermaids.forEach((element) => {
+    const mermaid = element as HTMLElement
+    if (!mermaid.dataset.mermaidCode) {
+      mermaid.dataset.mermaidCode = mermaid.textContent?.trim() ?? ''
+    }
+  })
+
+  deferUntilVisible([...mermaids], async () => {
+    try {
+      const { default: mermaid } = await import('mermaid')
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'default',
+      })
+      mermaid.run()
+    }
+    catch (error) {
+      console.error('[MediaEmbed] Failed to load Mermaid:', error)
+    }
+  })
+}
+
+// Load YouTube embed script
+async function setupYouTubeEmbeds() {
+  const youtube = document.querySelectorAll('lite-youtube')
+  if (youtube.length === 0) {
+    return
+  }
+
+  deferUntilVisible([...youtube], async () => {
+    try {
+      // @ts-expect-error - No type definitions available for lite-youtube-embed
+      await import('lite-youtube-embed')
+    }
+    catch (error) {
+      console.error('[MediaEmbed] Failed to load YouTube embed:', error)
+    }
+  })
+}
+
+// Initialize Twitter widgets
+async function setupTweetEmbeds() {
+  const tweets = document.querySelectorAll('.twitter-tweet')
+  if (tweets.length === 0) {
+    return
+  }
+
+  tweets.forEach((tweet) => {
+    tweet.setAttribute('data-theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light')
+  })
+
+  deferUntilVisible([...tweets], () => {
+    const script = document.createElement('script')
+    script.src = 'https://platform.twitter.com/widgets.js'
+    script.async = true
+    document.head.appendChild(script)
+  })
+}
+
+// Initialize all media embeds
+async function setupMediaEmbeds() {
+  await Promise.allSettled([
+    setupYouTubeEmbeds(),
+    setupTweetEmbeds(),
+    setupMermaidEmbeds(),
+  ])
+}
+
+// Re-render Mermaid diagrams on theme change
+function updateMermaidTheme() {
+  const mermaids = document.querySelectorAll('pre.mermaid[data-mermaid-code][data-processed]')
+  if (mermaids.length === 0) {
+    return
+  }
+
+  const isDark = document.documentElement.classList.contains('dark')
+
+  import('mermaid').then(({ default: mermaid }) => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: isDark ? 'dark' : 'default',
+    })
+
+    // Reset content and re-run Mermaid
+    mermaids.forEach((element) => {
+      const mermaid = element as HTMLElement
+      mermaid.innerHTML = mermaid.dataset.mermaidCode ?? ''
+      mermaid.removeAttribute('data-processed')
+    })
+
+    mermaid.run()
+  }).catch((error) => {
+    console.error('[MediaEmbed] Failed to update Mermaid theme:', error)
+  })
+}
+
+// Handle horizontal scrolling for gallery
+function handleGalleryWheel(e: WheelEvent) {
+  const target = e.target instanceof Element ? e.target : null
+  const container = target?.closest('.gallery-container') as HTMLElement | null
+  if (!container) {
+    return
+  }
+
+  // Convert vertical scroll to horizontal
+  const previousScrollLeft = container.scrollLeft
+  container.scrollLeft += e.deltaY
+  if (container.scrollLeft === previousScrollLeft) {
+    return
+  }
+
+  // Prevent default scroll only if horizontal scroll occurred
+  e.preventDefault()
+}
+
+function setupGalleryWheels() {
+  const galleries = document.querySelectorAll<HTMLElement>('.gallery-container')
+  // Detached nodes take their listeners with them, so swapping page content
+  // automatically disposes previous bindings.
+  galleries.forEach((gallery) => {
+    if (gallery.dataset.wheelBound === 'true')
+      return
+    gallery.dataset.wheelBound = 'true'
+    gallery.addEventListener('wheel', handleGalleryWheel, { passive: false })
+  })
+}
+
+document.addEventListener('astro:page-load', setupGalleryWheels)
+document.addEventListener('astro:page-load', setupMediaEmbeds)
+document.addEventListener('theme-changed', updateMermaidTheme)
+document.addEventListener('astro:before-swap', () => {
+  mediaObservers.splice(0).forEach(observer => observer.disconnect())
+})
+</script>

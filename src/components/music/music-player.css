@@ -1,0 +1,642 @@
+/* Music player modal styles. Loaded only through the lazy music-player.ts
+   chunk — nothing here reaches the site's critical CSS path. */
+
+/* Monochrome Apple look: only gray/white/black, tuned per scheme. */
+#music-panel-modal {
+  --mp-accent: #1d1d1f;
+  --mp-accent-hover: #48484a;
+  --mp-on-accent: #f5f5f7;
+  --mp-ink: oklch(var(--un-preset-theme-colors-primary));
+  --mp-ink-soft: oklch(var(--un-preset-theme-colors-secondary) / 0.62);
+  --mp-hairline: oklch(var(--un-preset-theme-colors-secondary) / 0.14);
+  --mp-art: linear-gradient(140deg, oklch(0.56 0.004 298), oklch(0.26 0.006 298));
+  --mp-font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Hiragino Sans GB', 'Segoe UI', system-ui, sans-serif;
+}
+
+html.dark #music-panel-modal {
+  --mp-accent: #f5f5f7;
+  --mp-accent-hover: #d4d4d6;
+  --mp-on-accent: #1d1d1f;
+  --mp-hairline: oklch(var(--un-preset-theme-colors-secondary) / 0.22);
+  --mp-art: linear-gradient(140deg, oklch(0.68 0.004 298), oklch(0.36 0.006 298));
+}
+
+/* Native <dialog> stretched to the viewport: clicks that land on the dialog
+   box itself (outside the card) are treated as backdrop clicks. */
+#music-panel-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 1rem;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+/* Only visible while open: a bare `display:flex` here would override the
+   UA's `dialog:not([open]) { display: none }` and leave the card on screen
+   after closing. */
+#music-panel-modal[open] {
+  display: flex;
+}
+
+#music-panel-modal::backdrop {
+  background: oklch(0 0 0 / 0.42);
+  -webkit-backdrop-filter: blur(0.4rem) saturate(1.1);
+  backdrop-filter: blur(0.4rem) saturate(1.1);
+}
+
+.mp-card {
+  display: flex;
+  flex-direction: column;
+  width: min(23rem, calc(100vw - 24px));
+  max-height: min(85vh, 40rem);
+  overflow: hidden;
+  border: 1px solid var(--mp-hairline);
+  border-radius: 1.25rem;
+  background: oklch(var(--un-preset-theme-colors-background));
+  box-shadow: 0 1.6rem 3.6rem oklch(0 0 0 / 0.3);
+  font-family: var(--mp-font);
+}
+
+.mp-head {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.7rem 0.7rem 0;
+}
+
+.mp-close {
+  display: grid;
+  width: 1.7rem;
+  height: 1.7rem;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: oklch(var(--un-preset-theme-colors-secondary) / 0.08);
+  color: var(--mp-ink-soft);
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.mp-close:hover,
+.mp-close:focus-visible {
+  background: oklch(var(--un-preset-theme-colors-secondary) / 0.15);
+  color: var(--mp-ink);
+}
+
+/* The whole body scrolls: with the lyric window taking vertical space, the
+   playlist below the transport has to stay reachable on short screens. */
+.mp-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0 1rem 1rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: oklch(var(--un-preset-theme-colors-secondary) / 0.55) transparent;
+}
+
+.mp-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.mp-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mp-body::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: oklch(var(--un-preset-theme-colors-secondary) / 0.55);
+}
+
+.mp-hero {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-shrink: 0;
+  margin: 0.15rem 0 1rem;
+}
+
+.mp-cover {
+  display: grid;
+  flex-shrink: 0;
+  width: 4.6rem;
+  height: 4.6rem;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 0.8rem;
+  background: var(--mp-art);
+  box-shadow: 0 0.5rem 1.1rem oklch(var(--un-preset-theme-colors-secondary) / 0.24);
+}
+
+.mp-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mp-cover-char {
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1;
+  color: oklch(1 0 0 / 0.94);
+  text-shadow: 0 0.1rem 0.35rem oklch(0 0 0 / 0.25);
+  user-select: none;
+}
+
+.mp-meta {
+  min-width: 0;
+}
+
+.mp-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--mp-ink);
+  overflow-wrap: anywhere;
+}
+
+.mp-artist {
+  margin-top: 0.15rem;
+  font-size: 0.82rem;
+  color: var(--mp-ink-soft);
+}
+
+/* Lyric column: only present when the track ships an LRC. The list is moved
+   with a transform (never scrolled), so the active line can stay parked in the
+   middle while the mask fades both ends into the card. The hero grows to the
+   lyric window, so its height is viewport-capped: on a short screen it collapses
+   back to the cover's own height and the transport stays reachable. */
+#music-panel-modal.mp-has-lyrics .mp-hero {
+  align-items: flex-start;
+  height: clamp(4.6rem, 22vh, 8.5rem);
+}
+
+/* The lyric window is as tall as the hero, so the cover has to sit at its
+   middle rather than at the top of the row. */
+#music-panel-modal.mp-has-lyrics .mp-cover {
+  align-self: center;
+}
+
+.mp-lyrics {
+  display: none;
+}
+
+#music-panel-modal.mp-has-lyrics .mp-meta {
+  /* The title and artist already read out in the playlist row below, so the
+     lyric column takes their slot and starts flush against the cover. */
+  display: none;
+}
+
+#music-panel-modal.mp-has-lyrics .mp-lyrics {
+  display: block;
+  flex: 1 1 0;
+  min-width: 0;
+  align-self: stretch;
+  /* clip, not hidden: the lines are focusable buttons, and a hidden-overflow
+     box still scrolls programmatically when one gets focus, which would fight
+     the transform-based centring. */
+  overflow: hidden;
+  overflow: clip;
+  touch-action: none;
+  cursor: ns-resize;
+  user-select: none;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 32%, #000 68%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 32%, #000 68%, transparent);
+}
+
+.mp-lyrics-list {
+  position: relative;
+  will-change: transform;
+  transition: transform 450ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* Each line is a button: tapping it seeks to that line's timestamp. */
+.mp-lyric-line {
+  display: block;
+  width: 100%;
+  padding: 0.2rem 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  text-align: left;
+  color: var(--mp-ink);
+  opacity: 0.32;
+  filter: blur(0.4px);
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  transition: opacity 260ms ease;
+}
+
+.mp-lyric-line:focus-visible {
+  outline: 1px solid oklch(var(--un-preset-theme-colors-secondary) / 0.6);
+  outline-offset: -1px;
+}
+
+.mp-lyric-line.is-active {
+  font-weight: 600;
+  opacity: 1;
+  filter: none;
+}
+
+/* Times + compact volume share one row directly above the progress bar:
+   the volume block sits over the bar's right end. */
+.mp-times-row {
+  display: flex;
+  flex-shrink: 0;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.25rem;
+}
+
+.mp-times {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.4rem;
+  font-size: 0.68rem;
+  color: var(--mp-ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.mp-current::after {
+  content: '/';
+  margin-left: 0.4rem;
+}
+
+/* Bar + fill are absolutely centered inside a taller transparent button, so
+   coarse-pointer devices get a comfortable touch target for free. */
+.mp-progress {
+  position: relative;
+  flex-shrink: 0;
+  width: 100%;
+  height: 1rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+
+.mp-progress::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 3px;
+  margin-top: -1.5px;
+  border-radius: 999px;
+  background: var(--mp-hairline);
+}
+
+.mp-progress-fill {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 3px;
+  margin-top: -1.5px;
+  border-radius: 999px;
+  background: var(--mp-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  will-change: transform;
+}
+
+.mp-buttons {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 1.4rem;
+  margin: 0.8rem 0 0.2rem;
+}
+
+.mp-btn {
+  display: grid;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--mp-ink);
+  cursor: pointer;
+  transition: color 140ms ease, transform 140ms ease, background-color 140ms ease;
+}
+
+.mp-btn:hover,
+.mp-btn:focus-visible {
+  color: var(--mp-accent);
+}
+
+.mp-btn:active {
+  transform: scale(0.92);
+}
+
+.mp-btn:focus-visible {
+  outline: 1px solid oklch(var(--un-preset-theme-colors-secondary) / 0.6);
+  outline-offset: 3px;
+}
+
+.mp-prev,
+.mp-next {
+  width: 2.2rem;
+  height: 2.2rem;
+}
+
+.mp-play {
+  width: 2.7rem;
+  height: 2.7rem;
+  background: var(--mp-accent);
+  color: var(--mp-on-accent);
+  box-shadow: 0 0.5rem 1.2rem oklch(0 0 0 / 0.26);
+}
+
+.mp-play:hover,
+.mp-play:focus-visible {
+  background: var(--mp-accent-hover);
+  color: var(--mp-on-accent);
+}
+
+.mp-icon-play {
+  transform: translateX(1px);
+}
+
+.mp-icon-pause {
+  display: none;
+}
+
+#music-panel-modal.mp-playing .mp-icon-play {
+  display: none;
+}
+
+#music-panel-modal.mp-playing .mp-icon-pause {
+  display: block;
+}
+
+#music-panel-modal.mp-error .mp-current {
+  font-size: 0.66rem;
+  color: var(--mp-ink-soft);
+}
+
+.mp-volume {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.mp-vol-bars {
+  display: flex;
+  flex-shrink: 0;
+  align-items: flex-end;
+  gap: 0.15rem;
+  height: 1.375rem;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+
+/* Wide transparent button = generous hit area; the visible thin pillar is the
+   ::before, bottom-aligned and stepped in height per position. Pointer input
+   is owned by the group drag surface, so the buttons themselves opt out. */
+.mp-vol-bar {
+  display: flex;
+  width: 1rem;
+  height: 100%;
+  padding: 0;
+  align-items: flex-end;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: none;
+}
+
+.mp-vol-bar::before {
+  content: '';
+  width: 4px;
+  border-radius: 1.5px;
+  background: var(--mp-accent);
+  opacity: 0.25;
+  transition: opacity 140ms ease;
+}
+
+.mp-vol-bar:nth-child(1)::before { height: 6px; }
+.mp-vol-bar:nth-child(2)::before { height: 10px; }
+.mp-vol-bar:nth-child(3)::before { height: 14px; }
+.mp-vol-bar:nth-child(4)::before { height: 18px; }
+.mp-vol-bar:nth-child(5)::before { height: 22px; }
+
+.mp-vol-bar.is-active::before {
+  opacity: 1;
+}
+
+.mp-vol-bar:focus-visible {
+  outline: 1px solid oklch(var(--un-preset-theme-colors-secondary) / 0.6);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+@media (pointer: coarse) {
+  .mp-progress {
+    height: 2.2rem;
+  }
+
+  .mp-vol-bar {
+    width: 1.25rem;
+  }
+}
+
+.mp-section {
+  flex-shrink: 0;
+  margin: 0.8rem 0 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--mp-ink-soft);
+}
+
+.mp-playlist {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mp-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  height: 46px;
+  padding: 0 0.5rem;
+  border: 0;
+  border-radius: 0.6rem;
+  background: transparent;
+  color: var(--mp-ink);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 140ms ease;
+}
+
+@media (hover: hover) {
+  .mp-row:hover {
+    background: oklch(var(--un-preset-theme-colors-secondary) / 0.06);
+  }
+
+  html.dark .mp-row:hover {
+    background: oklch(var(--un-preset-theme-colors-secondary) / 0.1);
+  }
+}
+
+.mp-row:focus-visible {
+  outline: 1px solid oklch(var(--un-preset-theme-colors-secondary) / 0.6);
+  outline-offset: -1px;
+}
+
+.mp-row.is-active {
+  background: oklch(var(--un-preset-theme-colors-secondary) / 0.08);
+}
+
+html.dark .mp-row.is-active {
+  background: oklch(var(--un-preset-theme-colors-secondary) / 0.14);
+}
+
+.mp-row-index {
+  position: relative;
+  display: grid;
+  flex: 0 0 1.3rem;
+  height: 1.3rem;
+  place-items: center;
+}
+
+.mp-row-num {
+  font-size: 0.76rem;
+  color: var(--mp-ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.mp-row-eq {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  height: 0.75rem;
+  margin: auto 0;
+}
+
+.mp-row-eq span {
+  width: 2.5px;
+  border-radius: 1px;
+  background: var(--mp-accent);
+  transform: scaleY(0.4);
+}
+
+.mp-row-eq span:nth-child(1) { height: 45%; }
+.mp-row-eq span:nth-child(2) { height: 85%; }
+.mp-row-eq span:nth-child(3) { height: 60%; }
+
+.mp-row.is-active .mp-row-num {
+  display: none;
+}
+
+.mp-row.is-active .mp-row-eq {
+  display: flex;
+}
+
+.mp-row.is-active.is-playing-row .mp-row-eq span {
+  animation: mp-eq-bounce 1s ease-in-out infinite;
+}
+
+.mp-row.is-active.is-playing-row .mp-row-eq span:nth-child(1) { animation-delay: -0.4s; }
+.mp-row.is-active.is-playing-row .mp-row-eq span:nth-child(2) { animation-delay: -0.1s; }
+.mp-row.is-active.is-playing-row .mp-row-eq span:nth-child(3) { animation-delay: -0.65s; }
+
+@keyframes mp-eq-bounce {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
+}
+
+.mp-row-art {
+  display: grid;
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 0.3rem;
+  background: var(--mp-art);
+  color: oklch(1 0 0 / 0.94);
+  font-size: 0.8rem;
+  font-weight: 700;
+  user-select: none;
+}
+
+.mp-row-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mp-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  min-width: 0;
+}
+
+.mp-row-title {
+  overflow: hidden;
+  font-size: 0.84rem;
+  line-height: 1.3;
+  color: var(--mp-ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mp-row.is-active .mp-row-title {
+  color: var(--mp-ink);
+  font-weight: 600;
+}
+
+.mp-row-artist {
+  overflow: hidden;
+  font-size: 0.7rem;
+  line-height: 1.3;
+  color: var(--mp-ink-soft);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mp-close,
+  .mp-btn,
+  .mp-row {
+    transition: none;
+  }
+
+  .mp-row.is-active.is-playing-row .mp-row-eq span {
+    animation: none;
+    transform: scaleY(1);
+  }
+}

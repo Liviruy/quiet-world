@@ -1,0 +1,454 @@
+---
+import type { Language } from '@/i18n/config'
+import LanguageSwitcherIcon from '@/assets/icons/language-switcher.svg'
+import PaletteIcon from '@/assets/icons/palette-icon.svg'
+import ThemeToggleIcon from '@/assets/icons/theme-toggle.svg'
+import TopIcon from '@/assets/icons/top-icon.svg'
+import { moreLocales, themeConfig } from '@/config'
+import { getLangFromPath, getNextGlobalLang } from '@/i18n/lang'
+import { getLocalizedPath, getNextGlobalLangPath, getNextSupportedLangPath } from '@/i18n/path'
+
+interface Props {
+  supportedLangs: Language[]
+}
+
+const {
+  mode: defaultMode,
+  light: { background: lightMode },
+  dark: { background: darkMode },
+  themes = [],
+} = themeConfig.color
+
+const { supportedLangs } = Astro.props
+const currentPath = Astro.url.pathname
+const currentLang = getLangFromPath(currentPath)
+const musicOpenLabel = currentLang === 'en' ? 'Open music player' : '打开音乐播放器'
+
+// Check if there are other languages to switch
+const showLanguageSwitcher = moreLocales.length > 0
+// The 404 page is not localized: a literal /en/404/ would loop back into a
+// missing page, so the language switch goes to the other language's home.
+const isNotFound = currentPath.replace(/\/$/, '') === '/404'
+const nextUrl = isNotFound
+  ? getLocalizedPath('/', getNextGlobalLang(currentLang))
+  : supportedLangs.length > 0
+    ? getNextSupportedLangPath(currentPath, supportedLangs) // Use supported languages when available
+    : getNextGlobalLangPath(currentPath) // Fallback to all languages when no supported languages data
+
+// Palette button: cycles through the extra color schemes. Ids and localized
+// names ride on data attributes so the script stays framework-free.
+const themeIds = themes.map(t => t.id)
+const themeNames = themes.map(t => currentLang === 'en' ? t.nameEn : t.name)
+const showPaletteSwitcher = themes.length > 0
+---
+
+<div
+  class:list={[
+  'site-actions absolute right-7.25vw top-14.6 z-20 flex gap-4 min-[823px]:max-lg:right-[calc(50vw-22rem)]',
+  'lg:(fixed bottom-[min(10.27rem+1.92vw,12rem)] right-[max(5rem,calc(50vw-35rem))] top-auto w-14rem gap-6)',
+]}
+>
+  <!-- Music note: lazily boots the player modal (src/components/music/). -->
+  <button
+    id="music-toggle"
+    class="music-note aspect-square w-4 inline-flex items-center justify-center c-secondary transition-[color,transform] duration-150 ease-out active:scale-90 hover:c-primary"
+    aria-label={musicOpenLabel}
+    aria-expanded="false"
+    aria-controls="music-panel-modal"
+  >
+    <!-- Heroicons v2.2.0 outline "musical-note", path verbatim from
+         https://unpkg.com/heroicons@2.2.0/24/outline/musical-note.svg
+         The outline weight keeps the original double-note silhouette while
+         matching the thin chrome strokes. -->
+    <svg class="aspect-square w-full" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="m9 9 10.5-3m0 6.553v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 1 1-.99-3.467l2.31-.66a2.25 2.25 0 0 0 1.632-2.163Zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 0 1-.99-3.467l2.31-.66A2.25 2.25 0 0 0 9 15.553Z" />
+    </svg>
+  </button>
+
+  <!-- Language Switcher -->
+  {showLanguageSwitcher && (
+    <a
+      id="language-switcher"
+      class="aspect-square w-4 inline-flex items-center justify-center c-secondary no-underline transition-[color,transform] duration-150 ease-out active:scale-90 hover:c-primary"
+      aria-label={currentLang === 'en' ? 'Switch language' : '切换语言'}
+      href={nextUrl}
+      data-astro-prefetch="viewport"
+    >
+      <LanguageSwitcherIcon
+        aria-hidden="true"
+        fill="currentColor"
+      />
+    </a>
+  )}
+
+  <!-- Color Scheme Switcher (cycles through the extra palettes) -->
+  {showPaletteSwitcher && (
+    <button
+      id="palette-switcher"
+      class="aspect-square w-4 c-secondary transition-[color,transform] duration-150 ease-out active:scale-90 hover:c-primary"
+      data-theme-ids={JSON.stringify(themeIds)}
+      data-theme-names={JSON.stringify(themeNames)}
+      aria-label={currentLang === 'en' ? 'Switch color scheme' : '切换配色'}
+    >
+      <PaletteIcon
+        aria-hidden="true"
+        fill="currentColor"
+      />
+    </button>
+  )}
+
+  <!-- Theme Toggle (moon hidden in a circle) -->
+  <button
+    id="theme-toggle-button"
+    class="aspect-square w-4 c-secondary transition-[color,transform] duration-150 ease-out active:scale-90 hover:c-primary"
+    data-light-mode={lightMode}
+    data-dark-mode={darkMode}
+    data-default-mode={defaultMode}
+    aria-label="Switch light/dark theme"
+  >
+    <ThemeToggleIcon
+      aria-hidden="true"
+      fill="currentColor"
+    />
+  </button>
+
+  <!-- Back to top last: on desktop this row shares the nav rail's left edge, and
+     a leading slot would push the music note 40px right of the text above it.
+     On desktop it stays in flow and only fades (opacity), so the other controls
+     never shift when it appears. Below lg it is pinned bottom-right and leaves
+     the flow entirely — no placeholder there, or the whole row, theme toggle
+     included, would sit one slot (32px) away from the right edge. -->
+  <button
+    id="back-to-top"
+    class="pointer-events-none z-30 aspect-square w-4 inline-flex flex-shrink-0 items-center justify-center c-secondary opacity-0 transition-[color,transform,opacity] duration-150 ease-out max-lg:fixed max-lg:bottom-6 max-lg:right-[7.25vw] max-lg:size-8 active:scale-90 hover:c-primary"
+    aria-label="Back to top"
+  >
+    <TopIcon aria-hidden="true" fill="currentColor" class="w-4" />
+  </button>
+</div>
+
+<!-- Theme Toggle Script >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> -->
+<script>
+// Prevent duplicate event listener registration after ClientRouter page swaps.
+// Astro re-runs non-inline <script> tags on each navigation, which would add
+// another click listener each time. Two listeners toggling in the same click
+// cancel each other out, making the button appear broken.
+if (window.__themeToggleRegistered) {
+  // Listener already registered from a previous page load — skip re-registration.
+}
+else {
+  window.__themeToggleRegistered = true
+
+  // Apply theme changes. `persist` is false only when reacting to the OS: a
+  // system flip is not a reader choice, and storing it would lock the site to
+  // whatever the OS was doing and outlive every later system change.
+  function applyTheme(isDark: boolean, persist = true) {
+    document.documentElement.classList.toggle('dark', isDark)
+
+    // Update meta theme-color tag
+    const metaThemeColor = document.head.querySelector('meta[name="theme-color"]')
+    const themeButton = document.getElementById('theme-toggle-button')
+    const lightMode = themeButton?.dataset.lightMode
+    const darkMode = themeButton?.dataset.darkMode
+
+    if (metaThemeColor && lightMode && darkMode) {
+      metaThemeColor.setAttribute('content', isDark ? darkMode : lightMode)
+    }
+
+    if (persist) {
+      try {
+        localStorage.setItem('theme', isDark ? 'dark' : 'light')
+      }
+      catch {
+        // Storage may be unavailable in private browsing contexts.
+      }
+    }
+    document.dispatchEvent(new Event('theme-changed'))
+  }
+
+  // Toggle theme mode
+  function toggleTheme() {
+    const isDark = !document.documentElement.classList.contains('dark')
+    applyTheme(isDark)
+  }
+
+  // Force repaint for fixed-position elements after theme change
+  function repaintFixedElements() {
+    const fixedElements = document.querySelectorAll<HTMLElement>('[class*="fixed"]')
+    fixedElements.forEach((el) => {
+      el.style.willChange = 'transform'
+    })
+    requestAnimationFrame(() => {
+      fixedElements.forEach((el) => {
+        el.style.removeProperty('will-change')
+      })
+    })
+  }
+
+  // Handle theme toggle click events
+  function handleThemeToggle(e: MouseEvent) {
+    if (!(e.target instanceof Element)) {
+      return
+    }
+
+    if (!e.target.closest('#theme-toggle-button')) {
+      return
+    }
+
+    // If reduceMotion is enabled, update theme directly (no animation)
+    if (document.documentElement.classList.contains('reduce-motion')) {
+      toggleTheme()
+      repaintFixedElements()
+      return
+    }
+
+    // Try to use View Transitions API for smooth animation
+    try {
+      // Add temporary markers before view transition
+      document.documentElement.style.setProperty('view-transition-name', 'theme-toggle-transition')
+      document.documentElement.setAttribute('data-theme-changing', '')
+
+      const transition = document.startViewTransition(toggleTheme)
+
+      transition.finished.then(() => {
+        document.documentElement.style.removeProperty('view-transition-name')
+        document.documentElement.removeAttribute('data-theme-changing')
+        repaintFixedElements()
+      })
+    }
+    catch {
+      // Fallback: if View Transitions API fails (e.g., transition already in progress
+      // after page navigation), toggle directly without animation
+      document.documentElement.style.removeProperty('view-transition-name')
+      document.documentElement.removeAttribute('data-theme-changing')
+      toggleTheme()
+      repaintFixedElements()
+    }
+  }
+
+  // Follow a live system theme change only while the reader has not chosen and
+  // the site is configured to track the OS. applyTheme persists to localStorage,
+  // so without these guards a single OS flip (auto dark at sunset) would override
+  // an explicit `mode` in src/config.ts for every later visit.
+  function handleSystemChange(event: MediaQueryListEvent) {
+    const themeButton = document.getElementById('theme-toggle-button')
+    if (themeButton?.dataset.defaultMode !== 'auto') {
+      return
+    }
+
+    try {
+      if (localStorage.getItem('theme')) {
+        return
+      }
+    }
+    catch {
+      // Storage unavailable: nothing can have been persisted, so keep following.
+    }
+
+    applyTheme(event.matches, false)
+  }
+
+  document.addEventListener('click', handleThemeToggle)
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', handleSystemChange)
+}
+</script>
+
+<!-- Back to Top Script >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> -->
+<script>
+// Show the back-to-top button while the user is actively scrolling past one viewport.
+// Keep it on screen for HIDE_DELAY after the last scroll event, then fade it out.
+// Re-shows when scrolling resumes.
+//
+// The scroll/click handlers are registered on window/document exactly once and
+// look up the current #back-to-top node per event. The button is re-created by
+// every ClientRouter swap, so binding per-element (the old approach) left a
+// window scroll listener — and its detached-button closure — behind on each
+// navigation, accumulating for the whole session.
+;(function () {
+  const HIDE_DELAY = 7000 // ms after the last scroll event before hiding
+  let hideTimer: ReturnType<typeof setTimeout> | null = null
+  let ticking = false
+
+  function getButton() {
+    return document.getElementById('back-to-top') as HTMLButtonElement | null
+  }
+
+  function show(button: HTMLButtonElement) {
+    button.classList.remove('opacity-0', 'pointer-events-none')
+  }
+
+  function hide(button: HTMLButtonElement | null) {
+    button?.classList.add('opacity-0', 'pointer-events-none')
+  }
+
+  function resetHideTimer() {
+    if (hideTimer)
+      clearTimeout(hideTimer)
+    hideTimer = setTimeout(() => hide(getButton()), HIDE_DELAY)
+  }
+
+  function updateVisibility() {
+    const button = getButton()
+    if (button) {
+      if (window.scrollY > window.innerHeight) {
+        show(button)
+        // Reset the hide timer every time we see scroll activity
+        resetHideTimer()
+      }
+      else {
+        // Near top — hide immediately and cancel any pending hide timer
+        if (hideTimer) {
+          clearTimeout(hideTimer)
+          hideTimer = null
+        }
+        hide(button)
+      }
+    }
+    ticking = false
+  }
+
+  function onScroll() {
+    if (!ticking) {
+      window.requestAnimationFrame(updateVisibility)
+      ticking = true
+    }
+  }
+
+  function onClick(e: MouseEvent) {
+    if (!(e.target instanceof Element))
+      return
+    if (!e.target.closest('#back-to-top'))
+      return
+    const reduceMotion = document.documentElement.classList.contains('reduce-motion')
+    window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' })
+    // Keep visible during the smooth-scroll animation, then hide
+    resetHideTimer()
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true })
+  document.addEventListener('click', onClick)
+})()
+</script>
+
+<!-- Language Switcher History Script >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> -->
+<script>
+import { navigate } from 'astro:transitions/client'
+
+// Switching language keeps the reader on the same article, so it must not add a
+// back step: without this, "back" bounces through the previous language instead
+// of returning to wherever they came from. Astro's navigate() replaces the
+// history entry and still does a soft (view-transition) swap.
+if (!window.__langSwitchReplace) {
+  window.__langSwitchReplace = true
+
+  document.addEventListener('click', (event) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return
+    }
+    const link = (event.target as Element | null)?.closest('#language-switcher') as HTMLAnchorElement | null
+    if (!link?.href) {
+      return
+    }
+    event.preventDefault()
+    void navigate(link.href, { history: 'replace' })
+  })
+}
+</script>
+
+<!-- Color Scheme Switcher Script >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> -->
+<script>
+// Cycle through themeConfig.color.themes: each click applies the next scheme
+// on <html data-theme="...">, persists it to localStorage, then asks the
+// head inline script (via the theme-color-changed event) to recompute the
+// meta theme-color from its own scheme data.
+// The reveal animation matches the light/dark toggle's arc wipe.
+;
+(function () {
+  const STORAGE_KEY = 'theme-color'
+
+  const currentThemeId = (): string => {
+    return document.documentElement.dataset.theme || ''
+  }
+
+  const syncLabel = () => {
+    const btn = document.getElementById('palette-switcher')
+    if (!btn) {
+      return
+    }
+    const isEn = document.documentElement.lang.toLowerCase().startsWith('en')
+    const names: string[] = JSON.parse(btn.dataset.themeNames || '[]')
+    const ids: string[] = JSON.parse(btn.dataset.themeIds || '[]')
+    const index = ids.indexOf(currentThemeId())
+    const name = index >= 0 ? names[index] : ''
+    btn.setAttribute('aria-label', isEn
+      ? (name ? `Switch color scheme (current: ${name})` : 'Switch color scheme')
+      : (name ? `切换配色（当前：${name}）` : '切换配色'))
+  }
+
+  const applyTheme = (id: string) => {
+    if (id) {
+      document.documentElement.dataset.theme = id
+    }
+    else {
+      delete document.documentElement.dataset.theme
+    }
+    try {
+      localStorage.setItem(STORAGE_KEY, id)
+    }
+    catch {
+      // Storage may be unavailable in private browsing contexts.
+    }
+    // Head.astro owns the meta theme-color computation (single source of truth).
+    document.dispatchEvent(new Event('theme-color-changed'))
+    syncLabel()
+  }
+
+  const handleClick = (e: MouseEvent) => {
+    if (!(e.target instanceof Element) || !e.target.closest('#palette-switcher')) {
+      return
+    }
+    const btn = document.getElementById('palette-switcher')
+    if (!btn) {
+      return
+    }
+    const ids: string[] = JSON.parse(btn.dataset.themeIds || '[]')
+    if (ids.length === 0) {
+      return
+    }
+    // index + 1 with an extra slot wraps back to '' (the base 印刷灰 palette).
+    const next = ids[(ids.indexOf(currentThemeId()) + 1) % (ids.length + 1)] || ''
+    const toggle = () => applyTheme(next)
+
+    if (document.documentElement.classList.contains('reduce-motion')) {
+      toggle()
+      return
+    }
+    try {
+      document.documentElement.style.setProperty('view-transition-name', 'theme-toggle-transition')
+      document.documentElement.setAttribute('data-theme-changing', '')
+      const transition = document.startViewTransition(toggle)
+      transition.finished.then(() => {
+        document.documentElement.style.removeProperty('view-transition-name')
+        document.documentElement.removeAttribute('data-theme-changing')
+      })
+    }
+    catch {
+      document.documentElement.style.removeProperty('view-transition-name')
+      document.documentElement.removeAttribute('data-theme-changing')
+      toggle()
+    }
+  }
+
+  document.addEventListener('click', handleClick)
+  document.addEventListener('astro:page-load', syncLabel)
+  syncLabel()
+})()
+</script>
+
+<style>
+  /* The engine toggles html.music-playing, so the note icon tints with the
+     site accent without any per-page JS. */
+  :global(html.music-playing) .music-note {
+    color: oklch(var(--un-preset-theme-colors-primary));
+  }
+</style>

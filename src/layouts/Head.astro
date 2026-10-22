@@ -1,0 +1,385 @@
+---
+import { ClientRouter } from 'astro:transitions'
+import katexCSS from 'katex/dist/katex.min.css?url'
+import { base, defaultLocale, themeConfig } from '@/config'
+import { langMap } from '@/i18n/config'
+import { ui } from '@/i18n/ui'
+import { getPageInfo } from '@/utils/page'
+
+interface Props {
+  postTitle?: string
+  postSlug?: string
+  description?: string
+  publishedTime?: Date
+  updatedTime?: Date
+  tags?: string[]
+  ogImage?: string
+  supportedLangs?: import('@/i18n/config').Language[]
+}
+
+// Props and Language
+const {
+  postTitle,
+  postSlug,
+  description,
+  publishedTime,
+  updatedTime,
+  tags = [],
+  ogImage,
+} = Astro.props
+const { currentLang, isHome, isPost, isAlbumsDetail } = getPageInfo(Astro.url.pathname)
+const currentUI = ui[currentLang as keyof typeof ui] ?? {}
+
+// The `?v=` on each preload must match the CSS asking for the same file - a
+// preload whose URL differs downloads the font twice.
+const displayFontVersion = 'v=20260925c'
+// English chrome is drawn by Snell/STIX. Chinese chrome resolves every glyph in
+// EarlySummer first (see the zh stacks in font.css), with three tiny U+0020-only
+// faces standing in for the invisible layout space; the full latin faces are
+// then only fetched when real latin text appears. Preload exactly what this
+// route paints:
+// - zh: EarlySummer (title/subtitle/nav) + STIX-Italic on the 404 heading.
+// - en: Snell-Black (title) + STIX (subtitle) + STIX-Italic (nav).
+// - date pages only: Snell-Bold, used by PostDate on the home and post routes.
+const isNotFound = Astro.url.pathname.replace(/\/$/, '') === '/404'
+const needsDateFont = isHome || isPost
+const criticalFontPreloads = currentLang === 'en'
+  ? [
+      `fonts/Snell-Black-SF.woff2?${displayFontVersion}`,
+      `fonts/STIX-VF.woff2?${displayFontVersion}`,
+      `fonts/STIX-Italic-VF.woff2?${displayFontVersion}`,
+      ...(needsDateFont ? [`fonts/Snell-Bold-SF.woff2?${displayFontVersion}`] : []),
+    ]
+  : [
+      'fonts/EarlySummer-Chrome.woff2',
+      ...(isNotFound ? [`fonts/STIX-Italic-VF.woff2?${displayFontVersion}`] : []),
+      ...(needsDateFont ? [`fonts/Snell-Bold-SF.woff2?${displayFontVersion}`] : []),
+    ]
+
+// Posts read zh body text in the full LXGW WenKai (落霞孤鹜文楷) subset
+// (#post-content). Album details use the much smaller album-only subset for
+// their short .detail-description, so preload that instead. Both keep the
+// correct face on first paint; see scripts/subset-fonts.ts.
+const bodyFontPreload = currentLang === 'zh' && isPost
+  ? ['fonts/lxgw-wenkai-body-400.woff2?v=20260925e']
+  : []
+const albumFontPreload = currentLang === 'zh' && isAlbumsDetail
+  ? ['fonts/lxgw-wenkai-album-400.woff2?v=20261021']
+  : []
+
+// Site Configuration
+const { title, subtitle, author, url: siteURL, favicon } = themeConfig.site
+const { mode: defaultMode, light: { background: lightMode }, dark: { background: darkMode } } = themeConfig.color
+const { katex: katexEnabled, reduceMotion } = themeConfig.global
+
+// Site Metadata
+const metaTheme = defaultMode === 'dark' ? darkMode : lightMode
+const siteTitle = currentUI.title || title
+const siteSubtitle = currentUI.subtitle || subtitle
+
+// Page Metadata
+const pageTitle = postTitle ? `${postTitle} | ${siteTitle}` : `${siteTitle} - ${siteSubtitle}`
+const isArticle = Boolean(postTitle)
+
+// Description: post > site subtitle
+const pageDescription = description || siteSubtitle
+
+// OG/Twitter image
+// Articles use the generated OG image; other pages fall back to the site default.
+// TODO: design a dedicated default social share image and replace og-logo.png.
+const defaultOGImage = new URL(`${base}/icons/og-logo.png`, siteURL).toString()
+const socialImage = ogImage || (postSlug ? new URL(`${base}/og/${postSlug}.png`, siteURL).toString() : defaultOGImage)
+
+// Current page absolute URL (used by og:url, matches canonical)
+const canonicalURL = new URL(Astro.url.pathname, siteURL).toString()
+
+// og:locale uses BCP-47 codes (zh-CN, en-US) from the language map
+const ogLocale = langMap[currentLang as keyof typeof langMap]?.[0] ?? 'en-US'
+
+// Site base URL for WebSite schema
+const siteRootURL = new URL(base || '/', siteURL).toString()
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// JSON-LD Structured Data
+// - WebSite schema on every page (helps search engines understand the site)
+// - BlogPosting schema on article pages (enables rich results: date, author, image)
+function buildWebSiteSchema() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    'name': siteTitle,
+    'url': siteRootURL,
+    'description': siteSubtitle,
+    'inLanguage': ogLocale,
+  }
+}
+
+function buildBlogPostingSchema() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    'headline': postTitle,
+    'description': pageDescription,
+    'image': [socialImage],
+    'datePublished': publishedTime?.toISOString(),
+    'dateModified': (updatedTime ?? publishedTime)?.toISOString(),
+    'author': {
+      '@type': 'Person',
+      'name': author,
+    },
+    'publisher': {
+      '@type': 'Person',
+      'name': author,
+    },
+    'mainEntityOfPage': {
+      '@type': 'WebPage',
+      '@id': canonicalURL,
+    },
+    'keywords': tags.length > 0 ? tags.join(', ') : undefined,
+    'inLanguage': ogLocale,
+  }
+}
+
+const websiteSchema = buildWebSiteSchema()
+const articleSchema = isArticle ? buildBlogPostingSchema() : null
+---
+
+<head>
+  <ClientRouter />
+<!-- Basic Info -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+{favicon.toLowerCase().endsWith('.svg') && <link rel="icon" type="image/svg+xml" href={`${base}${favicon}`} />}
+{favicon.toLowerCase().endsWith('.png') && <link rel="icon" type="image/png" href={`${base}${favicon}`} />}
+{favicon.toLowerCase().endsWith('.ico') && <link rel="icon" type="image/x-icon" href={`${base}${favicon}`} />}
+<title>{pageTitle}</title>
+<meta name="author" content={author} />
+<meta name="generator" content={Astro.generator} />
+<!-- Declared before any CSS arrives, so an auto-dark engine (Chrome/Via) never
+     treats the page as dark-mode-unaware and force-darkens it during load.
+     global.css owns the per-theme refinement via `color-scheme`. -->
+<meta name="color-scheme" content="light dark" />
+<meta name="theme-color" content={metaTheme} />
+<meta name="description" content={pageDescription} />
+{criticalFontPreloads.map(font => (
+  <link rel="preload" href={`${base}/${font}`} as="font" type="font/woff2" crossorigin />
+))}
+{bodyFontPreload.map(font => (
+  <link rel="preload" href={`${base}/${font}`} as="font" type="font/woff2" crossorigin />
+))}
+{albumFontPreload.map(font => (
+  <link rel="preload" href={`${base}/${font}`} as="font" type="font/woff2" crossorigin />
+))}
+
+{katexEnabled && <link rel="stylesheet" href={katexCSS} media="print" onload={`this.media='all'`} />}
+
+<!-- Site Links -->
+<link rel="canonical" href={Astro.url} />
+{/* The default locale serves its feeds at the site root; other languages
+    have their own /<lang>/rss.xml + atom.xml (see pages/[...lang]/rss.xml.ts). */}
+<link rel="alternate" href={`${base}${currentLang === defaultLocale ? '' : `/${currentLang}`}/rss.xml`} type="application/rss+xml" title="RSS Feed" />
+<link rel="alternate" href={`${base}${currentLang === defaultLocale ? '' : `/${currentLang}`}/atom.xml`} type="application/atom+xml" title="Atom Feed" />
+
+<!-- Open Graph / Twitter Card -->
+<meta property="og:type" content={isArticle ? 'article' : 'website'} />
+<meta property="og:site_name" content={siteTitle} />
+<meta property="og:title" content={postTitle || siteTitle} />
+<meta property="og:description" content={pageDescription} />
+<meta property="og:url" content={canonicalURL} />
+<meta property="og:image" content={socialImage} />
+<meta property="og:locale" content={ogLocale} />
+{isArticle && publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
+{isArticle && updatedTime && <meta property="article:modified_time" content={updatedTime.toISOString()} />}
+{isArticle && <meta property="article:author" content={author} />}
+{isArticle && tags.map(tag => <meta property="article:tag" content={tag} />)}
+<meta name="twitter:card" content={isArticle ? 'summary_large_image' : 'summary'} />
+<meta name="twitter:title" content={postTitle || siteTitle} />
+<meta name="twitter:description" content={pageDescription} />
+<meta name="twitter:image" content={socialImage} />
+
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json" is:inline set:html={JSON.stringify(websiteSchema)} />
+{articleSchema && <script type="application/ld+json" is:inline set:html={JSON.stringify(articleSchema)} />}
+
+<!-- Theme Toggle -->
+<script
+  is:inline
+  define:vars={{
+    defaultMode,
+    lightMode,
+    darkMode,
+    reduceMotion,
+    themeColorSchemes: (themeConfig.color.themes || []).map(t => ({ id: t.id, lightBg: t.light.background, darkBg: t.dark.background })),
+ }}
+>
+(function () {
+  // ── Mobile: bypass View Transitions entirely ──────────────────────────────
+  // On phones, every ClientRouter navigation asks the browser to snapshot the
+  // whole page for a View Transition. That snapshot repaint — expensive with
+  // the fixed player's backdrop-filter — is what made quick navigation feel
+  // stuck, even with the root animation disabled. Replace startViewTransition
+  // with a stub that swaps the DOM synchronously and satisfies the
+  // ViewTransition contract, so page changes are instant. This must run before
+  // the ClientRouter module loads. The theme/palette arc reveal uses the same
+  // API and gracefully degrades to an instant switch here too; desktop keeps
+  // every animation.
+  if (window.matchMedia('(max-width: 1023px)').matches && 'startViewTransition' in document) {
+    document.startViewTransition = function (updateCallback) {
+      const done = Promise.resolve().then(() => {
+        if (typeof updateCallback === 'function') {
+          updateCallback()
+        }
+      })
+      return {
+        updateCallbackDone: done,
+        ready: done,
+        finished: done,
+        skipTransition() {},
+      }
+    }
+  }
+
+  // Check if current theme is dark
+  // Priority: localStorage theme > default theme > system preference
+  function isCurrentDark() {
+    let currentTheme = null
+    try {
+      currentTheme = localStorage.getItem('theme')
+    }
+    catch {
+      // Storage may be unavailable in private browsing contexts.
+    }
+    if (currentTheme) {
+      return currentTheme === 'dark'
+    }
+
+    if (defaultMode !== 'auto') {
+      return defaultMode === 'dark'
+    }
+
+    // If defaultMode is auto, follow system preference
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
+  }
+
+  // Apply the saved color scheme (palette) before first paint and after swaps
+  const initThemeColor = (doc = document) => {
+    let saved = null
+    try {
+      saved = localStorage.getItem('theme-color')
+    }
+    catch {
+      // Storage may be unavailable in private browsing contexts.
+    }
+    if (saved && themeColorSchemes.some(s => s.id === saved)) {
+      doc.documentElement.setAttribute('data-theme', saved)
+    }
+    else {
+      doc.documentElement.removeAttribute('data-theme')
+    }
+  }
+
+  // Initialize theme
+  const initTheme = (doc = document) => {
+    const isDark = isCurrentDark()
+    doc.documentElement.classList.toggle('dark', isDark)
+
+    // Update meta theme-color tag; honor the active color scheme's background
+    const metaThemeColor = doc.head.querySelector('meta[name="theme-color"]')
+    if (metaThemeColor) {
+      const scheme = themeColorSchemes.find(s => s.id === (doc.documentElement.getAttribute('data-theme') || ''))
+      metaThemeColor.setAttribute('content', scheme
+        ? `oklch(${isDark ? scheme.darkBg : scheme.lightBg})`
+        : (isDark ? darkMode : lightMode))
+    }
+  }
+
+  // Check and init motion preference
+  // Condition: theme config || system preference || browser capability
+  const initMotionPref = (doc = document) => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const supportsViewTransitions = 'startViewTransition' in doc
+    const shouldReduceMotion = reduceMotion || prefersReducedMotion || !supportsViewTransitions
+
+    doc.documentElement.classList.toggle('reduce-motion', shouldReduceMotion)
+  }
+
+  // Update theme before page transition to prevent flashing
+  document.addEventListener('astro:before-swap', ({ newDocument }) => {
+    initTheme(newDocument)
+    initThemeColor(newDocument)
+    initMotionPref(newDocument)
+  })
+
+  // The palette switcher dispatches this after applying a color scheme;
+  // recompute the meta theme-color from the scheme's background.
+  document.addEventListener('theme-color-changed', () => {
+    initTheme()
+  })
+
+  // Re-apply theme AFTER page transition completes
+  // This is critical: Astro ClientRouter may replace the <html> element during swap,
+  // losing the dark/reduce-motion classes that were added by the inline script.
+  document.addEventListener('astro:after-swap', () => {
+    initTheme()
+    initThemeColor()
+    initMotionPref()
+  })
+
+  // Also re-apply on every page load (covers first load + post-navigation)
+  document.addEventListener('astro:page-load', () => {
+    initTheme()
+    initThemeColor()
+    initMotionPref()
+
+    // Force PostNav grid to recalculate after view transitions.
+    // CSS Grid 1fr tracks can compute incorrectly during Astro ClientRouter
+    // swaps; forcing a layout pass fixes PostNav asymmetry.
+    requestAnimationFrame(() => {
+      const postNav = document.querySelector('.post-nav')
+      if (postNav) {
+        const grid = postNav.querySelector('.post-nav-grid')
+        if (grid) {
+          // Reading offsetHeight triggers a forced synchronous layout,
+          // recalculating grid tracks to their correct sizes
+          void grid.offsetHeight
+        }
+      }
+    })
+  })
+
+  // Initialize theme on first load
+  initTheme()
+  initThemeColor()
+  initMotionPref()
+})()
+</script>
+
+<!-- Re-apply the desktop rail widths after Astro replaces page content. -->
+<script is:inline>
+  (() => {
+    function syncDesktopRail() {
+      const footer = document.querySelector('.site-footer')
+      const desktop = window.matchMedia('(min-width: 1024px)').matches
+
+      // Only the footer width needs re-pinning after swaps. The
+      // navigation is vertically centered in CSS and must never receive
+      // inline top/bottom overrides here.
+      if (desktop) {
+        if (footer) {
+          footer.style.setProperty('width', '14rem', 'important')
+          footer.style.setProperty('max-width', '14rem', 'important')
+        }
+      }
+      else {
+        footer?.style.removeProperty('width')
+        footer?.style.removeProperty('max-width')
+      }
+    }
+
+    syncDesktopRail()
+    document.addEventListener('astro:page-load', syncDesktopRail)
+    window.addEventListener('resize', syncDesktopRail, { passive: true })
+  })()
+</script>
+
+</head>

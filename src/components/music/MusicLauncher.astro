@@ -1,0 +1,46 @@
+---
+---
+
+<!-- Music entry point. Renders no markup: a ~1KB bundled script listens for
+     #music-toggle clicks and dynamic-imports the full player (JS + CSS +
+     track list) only on that first click. -->
+<script>
+// Astro re-runs plain <script> tags after ClientRouter swaps; without this
+// guard every navigation would stack another delegated click listener.
+if (!window.__musicLauncherBound) {
+  window.__musicLauncherBound = true
+
+  let busy = false
+  // import() dedupes, so hovering only moves the chunk's round trip off the
+  // click path; preload() then warms the stylesheet and first lyric as well.
+  // Touch devices never fire pointerenter, so they pay nothing.
+  const load = () => import('./music-player')
+
+  document.addEventListener('pointerenter', (event) => {
+    if (event.target instanceof Element && event.target.closest('#music-toggle')) {
+      load().then(player => player.preload()).catch(() => { /* retried on click */ })
+    }
+  }, true)
+
+  document.addEventListener('click', async (event) => {
+    if (!(event.target instanceof Element) || !event.target.closest('#music-toggle')) {
+      return
+    }
+    if (busy) {
+      return
+    }
+    busy = true
+    try {
+      const { toggleMusicPanel } = await load()
+      toggleMusicPanel()
+    }
+    catch {
+      // A failed chunk fetch leaves the button inert; audio state is
+      // untouched, so the next click can retry cleanly.
+    }
+    finally {
+      busy = false
+    }
+  })
+}
+</script>

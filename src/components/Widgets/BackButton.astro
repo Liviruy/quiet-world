@@ -1,0 +1,43 @@
+---
+import GoBackIcon from '@/assets/icons/go-back.svg';
+---
+
+<button
+  id="back-button"
+  class="mb-4 block aspect-square w-4.5 c-secondary/60 transition-colors ease-out hover:c-primary active:scale-90!"
+  lg="absolute left--10 top-3.8 mb-0"
+  type="button"
+  aria-label={Astro.currentLocale === 'en' ? 'Go back' : '返回'}
+>
+  <GoBackIcon
+    aria-hidden="true"
+    fill="currentColor"
+  />
+</button>
+
+<!-- Go Back Script >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> -->
+<script>
+if (!window.__backButtonRegistered) {
+  window.__backButtonRegistered = true
+
+  function handleBackButtonClick(e: MouseEvent) {
+    if (!(e.target instanceof Element) || !e.target.closest('#back-button')) {
+      return
+    }
+
+    // __onSiteSession comes from Layout: once ClientRouter has swapped a page in,
+    // the previous entry is ours, which document.referrer (frozen at first load)
+    // cannot report.
+    if (window.history.length > 1 && window.__onSiteSession) {
+      window.history.back()
+      return
+    }
+
+    // Fallback to homepage when the article is the first page in the tab.
+    const homeLink = document.getElementById('site-title-link') as HTMLAnchorElement | null
+    window.location.href = homeLink?.href || new URL('/', window.location.href).href
+  }
+
+  document.addEventListener('click', handleBackButtonClick)
+}
+</script>

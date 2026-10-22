@@ -1,0 +1,66 @@
+---
+import { ui } from '@/i18n/ui'
+import { getPageInfo } from '@/utils/page'
+
+const { currentLang, isHome, isPost, isAbout, isAlbums, isGallery, getLocalizedPath } = getPageInfo(Astro.url.pathname)
+const currentUI = ui[currentLang as keyof typeof ui] ?? {}
+
+const isPostActive = isHome || isPost
+const isAboutActive = isAbout
+const isAlbumsActive = isAlbums
+const isGalleryActive = isGallery
+
+function getNavItemClass(isActive: boolean) {
+  // Hover feedback is color + highlight sweep only: transitioning font-weight
+  // re-widens the glyphs and makes the label jitter sideways on every hover.
+  return isActive
+    ? 'highlight-static c-primary font-bold before:bottom-0.7em'
+    : 'highlight-hover transition-colors duration-150 ease-out before:bottom-0.7em hover:c-primary'
+}
+
+const navItems = [
+  {
+    href: '/',
+    label: currentUI.posts,
+    className: getNavItemClass(isPostActive),
+  },
+  {
+    href: '/albums/',
+    label: currentUI.travelog,
+    className: getNavItemClass(isAlbumsActive),
+  },
+  {
+    href: '/photos/',
+    label: currentUI.gallery,
+    className: getNavItemClass(isGalleryActive),
+  },
+  {
+    href: '/about/',
+    label: currentUI.about,
+    className: getNavItemClass(isAboutActive),
+  },
+]
+---
+
+<nav
+  aria-label="Site Navigation"
+  class:list={[
+    'mb-10.5 text-4 font-semibold leading-2.45em font-navbar site-navigation',
+    'lg:(uno-desktop-column text-4.5) cjk:tracking-wide',
+    isPost ? 'hidden lg:block' : '',
+  ]}
+>
+  <ul>
+    {navItems.map(item => (
+      <li>
+        <a
+          href={getLocalizedPath(item.href)}
+          class={item.className}
+          data-astro-prefetch="viewport"
+        >
+          {item.label}
+        </a>
+      </li>
+    ))}
+  </ul>
+</nav>

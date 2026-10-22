@@ -1,0 +1,203 @@
+export interface MusicTrackConfig {
+  id: string
+  title: string
+  artist: string
+  url: string
+  cover?: string
+  lyrics?: string
+}
+
+export const musicConfig: { enabled: boolean, tracks: MusicTrackConfig[] } = {
+  enabled: true,
+  tracks: [
+    {
+      id: 'jiebudiao',
+      title: '戒不掉',
+      artist: '欧阳耀莹',
+      url: 'https://music.artist.cc.cd/music/%E6%AC%A7%E9%98%B3%E8%80%80%E8%8E%B9-%E6%88%92%E4%B8%8D%E6%8E%89%EF%BC%88%E5%8E%9F%E5%A3%B0%E7%89%88%EF%BC%89.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E6%88%92%E4%B8%8D%E6%8E%89%EF%BC%88%E5%8E%9F%E5%A3%B0%E7%89%88%EF%BC%89%20-%20%E6%AC%A7%E9%98%B3%E8%80%80%E8%8E%B9.lrc',
+    },
+    {
+      id: 'chunjiaoyuzhiming',
+      title: '春娇与志明',
+      artist: '街道办GDC / 欧阳耀莹',
+      url: 'https://music.artist.cc.cd/music/%E6%98%A5%E5%A8%87%E4%B8%8E%E5%BF%97%E6%98%8E.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E6%98%A5%E5%A8%87%E4%B8%8E%E5%BF%97%E6%98%8E%20-%20%E8%A1%97%E9%81%93%E5%8A%9EGDC%26%E6%AC%A7%E9%98%B3%E8%80%80%E8%8E%B9.lrc',
+    },
+    {
+      id: 'womenhaoxiangzaijianguo',
+      title: '我们好像在哪见过',
+      artist: '杨宗纬 / 叶蓓',
+      url: 'https://music.artist.cc.cd/music/%E6%88%91%E4%BB%AC%E5%A5%BD%E5%83%8F%E5%9C%A8%E5%93%AA%E8%A7%81%E8%BF%87%E4%BD%A0%E8%AE%B0%E5%BE%97%E5%90%97.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E6%88%91%E4%BB%AC%E5%A5%BD%E5%83%8F%E5%9C%A8%E5%93%AA%E8%A7%81%E8%BF%87-%E3%80%8A%E5%92%B1%E4%BB%AC%E7%BB%93%E5%A9%9A%E5%90%A7%E3%80%8B%E7%94%B5%E8%A7%86%E5%89%A7%E7%89%87%E5%B0%BE%E6%9B%B2%20-%20%E6%9D%A8%E5%AE%97%E7%BA%AC%26%E5%8F%B6%E8%93%93.lrc',
+    },
+    {
+      id: 'xiayizhantianhou',
+      title: '下一站天后',
+      artist: 'Twins',
+      url: 'https://music.artist.cc.cd/music/%E4%B8%8B%E4%B8%80%E7%AB%99%E5%A4%A9%E5%90%8E%20-%20Twins.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E4%B8%8B%E4%B8%80%E7%AB%99%E5%A4%A9%E5%90%8E%20-%20Twins.lrc',
+    },
+    {
+      id: 'bulangmanzuiming',
+      title: '不浪漫罪名',
+      artist: '王杰',
+      url: 'https://music.artist.cc.cd/music/%E4%B8%8D%E6%B5%AA%E6%BC%AB%E7%BD%AA%E5%90%8D-%E7%8E%8B%E6%9D%B0.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E4%B8%8D%E6%B5%AA%E6%BC%AB%E7%BD%AA%E5%90%8D-%E7%8E%8B%E6%9D%B0.lrc',
+    },
+    {
+      id: 'renshenghechubuxiangfeng',
+      title: '人生何处不相逢',
+      artist: '陈慧娴',
+      url: 'https://music.artist.cc.cd/music/%E4%BA%BA%E7%94%9F%E4%BD%95%E5%A4%84%E4%B8%8D%E7%9B%B8%E9%80%A2-%E9%99%88%E6%85%A7%E5%A8%B4.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E4%BA%BA%E7%94%9F%E4%BD%95%E5%A4%84%E4%B8%8D%E7%9B%B8%E9%80%A2-%E9%99%88%E6%85%A7%E5%A8%B4.lrc',
+    },
+    {
+      id: 'pianpianxihuan',
+      title: '偏偏喜欢你',
+      artist: '陈百强',
+      url: 'https://music.artist.cc.cd/music/%E5%81%8F%E5%81%8F%E5%96%9C%E6%AC%A2%E4%BD%A0-%E9%99%88%E7%99%BE%E5%BC%BA.m4a',
+      lyrics: 'https://music.artist.cc.cd/music/%E5%81%8F%E5%81%8F%E5%96%9C%E6%AC%A2%E4%BD%A0-%E9%99%88%E7%99%BE%E5%BC%BA.lrc',
+    },
+    {
+      id: 'shannv',
+      title: '傻女',
+      artist: '陈慧娴',
+      url: 'https://music.artist.cc.cd/music/%E5%82%BB%E5%A5%B3%20-%20%E9%99%88%E6%85%A7%E5%A8%B4.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E5%82%BB%E5%A5%B3%20-%20%E9%99%88%E6%85%A7%E5%A8%B4.lrc',
+    },
+    {
+      id: 'fenfenzhongxuoyaoni',
+      title: '分分钟需要你',
+      artist: '林忆莲',
+      url: 'https://music.artist.cc.cd/music/%E5%88%86%E5%88%86%E9%92%9F%E9%9C%80%E8%A6%81%E4%BD%A0-%E6%9E%97%E5%BF%86%E8%8E%B2.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E5%88%86%E5%88%86%E9%92%9F%E9%9C%80%E8%A6%81%E4%BD%A0-%E6%9E%97%E5%BF%86%E8%8E%B2.lrc',
+    },
+    {
+      id: 'chulianqingren',
+      title: '初恋情人',
+      artist: '刘小慧',
+      url: 'https://music.artist.cc.cd/music/%E5%88%9D%E6%81%8B%E6%83%85%E4%BA%BA%20-%20%E5%88%98%E5%B0%8F%E6%85%A7.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E5%88%9D%E6%81%8B%E6%83%85%E4%BA%BA%20-%20%E5%88%98%E5%B0%8F%E6%85%A7.lrc',
+    },
+    {
+      id: 'qianqianquege',
+      title: '千千阕歌',
+      artist: '陈慧娴',
+      url: 'https://music.artist.cc.cd/music/%E5%8D%83%E5%8D%83%E9%98%95%E6%AD%8C-%E9%99%88%E6%85%A7%E5%A8%B4.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E5%8D%83%E5%8D%83%E9%98%95%E6%AD%8C-%E9%99%88%E6%85%A7%E5%A8%B4.lrc',
+    },
+    {
+      id: 'zhixiangyishengennizou',
+      title: '只想一生跟你走',
+      artist: '张学友',
+      url: 'https://music.artist.cc.cd/music/%E5%8F%AA%E6%83%B3%E4%B8%80%E7%94%9F%E8%B7%9F%E4%BD%A0%E8%B5%B0%20-%20%E5%BC%A0%E5%AD%A6%E5%8F%8B.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E5%8F%AA%E6%83%B3%E4%B8%80%E7%94%9F%E8%B7%9F%E4%BD%A0%E8%B5%B0%20-%20%E5%BC%A0%E5%AD%A6%E5%8F%8B.lrc',
+    },
+    {
+      id: 'xitieji',
+      title: '囍帖街',
+      artist: '谢安琪',
+      url: 'https://music.artist.cc.cd/music/%E5%9B%8D%E5%B8%96%E8%A1%97%20-%20%E8%B0%A2%E5%AE%89%E7%90%AA.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E5%9B%8D%E5%B8%96%E8%A1%97%20-%20%E8%B0%A2%E5%AE%89%E7%90%AA.lrc',
+    },
+    {
+      id: 'duijiqinggan',
+      title: '堆积情感',
+      artist: '邝美云',
+      url: 'https://music.artist.cc.cd/music/%E5%A0%86%E7%A7%AF%E6%83%85%E6%84%9F%20-%20%E9%82%9D%E7%BE%8E%E4%BA%91.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E5%A0%86%E7%A7%AF%E6%83%85%E6%84%9F%20-%20%E9%82%9D%E7%BE%8E%E4%BA%91.lrc',
+    },
+    {
+      id: 'haoxinfenshou',
+      title: '好心分手',
+      artist: '卢巧音 / 王力宏',
+      url: 'https://music.artist.cc.cd/music/%E5%A5%BD%E5%BF%83%E5%88%86%E6%89%8B%20-%20%E5%8D%A2%E5%B7%A7%E9%9F%B3%26%E7%8E%8B%E5%8A%9B%E5%AE%8F.m4a',
+      lyrics: 'https://music.artist.cc.cd/music/%E5%A5%BD%E5%BF%83%E5%88%86%E6%89%8B%20-%20%E5%8D%A2%E5%B7%A7%E9%9F%B3%26%E7%8E%8B%E5%8A%9B%E5%AE%8F.lrc',
+    },
+    {
+      id: 'fushishanxia',
+      title: '富士山下',
+      artist: '陈奕迅',
+      url: 'https://music.artist.cc.cd/music/%E5%AF%8C%E5%A3%AB%E5%B1%B1%E4%B8%8B-%E9%99%88%E5%A5%95%E8%BF%85.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E5%AF%8C%E5%A3%AB%E5%B1%B1%E4%B8%8B-%E9%99%88%E5%A5%95%E8%BF%85.lrc',
+    },
+    {
+      id: 'dangnianqing',
+      title: '当年情',
+      artist: '张国荣',
+      url: 'https://music.artist.cc.cd/music/%E5%BD%93%E5%B9%B4%E6%83%85-%E5%BC%A0%E5%9B%BD%E8%8D%A3.m4a',
+      lyrics: 'https://music.artist.cc.cd/music/%E5%BD%93%E5%B9%B4%E6%83%85-%E5%BC%A0%E5%9B%BD%E8%8D%A3.lrc',
+    },
+    {
+      id: 'bishaji',
+      title: '必杀技',
+      artist: '古巨基',
+      url: 'https://music.artist.cc.cd/music/%E5%BF%85%E6%9D%80%E6%8A%80%20-%20%E5%8F%A4%E5%B7%A8%E5%9F%BA.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E5%BF%85%E6%9D%80%E6%8A%80%20-%20%E5%8F%A4%E5%B7%A8%E5%9F%BA.lrc',
+    },
+    {
+      id: 'qingrenzhiji',
+      title: '情人知己',
+      artist: '叶蒨文',
+      url: 'https://music.artist.cc.cd/music/%E6%83%85%E4%BA%BA%E7%9F%A5%E5%B7%B1-%E5%8F%B6%E8%92%A8%E6%96%87.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E6%83%85%E4%BA%BA%E7%9F%A5%E5%B7%B1-%E5%8F%B6%E8%92%A8%E6%96%87.lrc',
+    },
+    {
+      id: 'haikuotiankong',
+      title: '海阔天空',
+      artist: 'BEYOND',
+      url: 'https://music.artist.cc.cd/music/%E6%B5%B7%E9%98%94%E5%A4%A9%E7%A9%BA-BEYOND.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E6%B5%B7%E9%98%94%E5%A4%A9%E7%A9%BA-BEYOND.lrc',
+    },
+    {
+      id: 'manburenshenglu',
+      title: '漫步人生路',
+      artist: '邓丽君',
+      url: 'https://music.artist.cc.cd/music/%E6%BC%AB%E6%AD%A5%E4%BA%BA%E7%94%9F%E8%B7%AF%20-%20%E9%82%93%E4%B8%BD%E5%90%9B.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E6%BC%AB%E6%AD%A5%E4%BA%BA%E7%94%9F%E8%B7%AF%20-%20%E9%82%93%E4%B8%BD%E5%90%9B.lrc',
+    },
+    {
+      id: 'aidegushishangji',
+      title: '爱的故事 (上集)',
+      artist: '孙耀威',
+      url: 'https://music.artist.cc.cd/music/%E7%88%B1%E7%9A%84%E6%95%85%E4%BA%8B%20(%E4%B8%8A%E9%9B%86)%20-%20%E5%AD%99%E8%80%80%E5%A8%81.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E7%88%B1%E7%9A%84%E6%95%85%E4%BA%8B%20(%E4%B8%8A%E9%9B%86)%20-%20%E5%AD%99%E8%80%80%E5%A8%81.lrc',
+    },
+    {
+      id: 'yehaizi',
+      title: '野孩子',
+      artist: '杨千嬅',
+      url: 'https://music.artist.cc.cd/music/%E9%87%8E%E5%AD%A9%E5%AD%90%20-%20%E6%9D%A8%E5%8D%83%E5%AC%85.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E9%87%8E%E5%AD%A9%E5%AD%90%20-%20%E6%9D%A8%E5%8D%83%E5%AC%85.lrc',
+    },
+    {
+      id: 'zhongwuyan',
+      title: '钟无艳',
+      artist: '谢安琪',
+      url: 'https://music.artist.cc.cd/music/%E9%92%9F%E6%97%A0%E8%89%B3%20-%20%E8%B0%A2%E5%AE%89%E7%90%AA.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E9%92%9F%E6%97%A0%E8%89%B3%20-%20%E8%B0%A2%E5%AE%89%E7%90%AA.lrc',
+    },
+    {
+      id: 'bimurushen',
+      title: '闭目入神',
+      artist: '郑中基',
+      url: 'https://music.artist.cc.cd/music/%E9%97%AD%E7%9B%AE%E5%85%A5%E7%A5%9E%20-%20%E9%83%91%E4%B8%AD%E5%9F%BA.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E9%97%AD%E7%9B%AE%E5%85%A5%E7%A5%9E%20-%20%E9%83%91%E4%B8%AD%E5%9F%BA.lrc',
+    },
+    {
+      id: 'nandeyouqingren',
+      title: '难得有情人',
+      artist: '关淑怡',
+      url: 'https://music.artist.cc.cd/music/%E9%9A%BE%E5%BE%97%E6%9C%89%E6%83%85%E4%BA%BA%20-%20%E5%85%B3%E6%B7%91%E6%80%A1.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E9%9A%BE%E5%BE%97%E6%9C%89%E6%83%85%E4%BA%BA%20-%20%E5%85%B3%E6%B7%91%E6%80%A1.lrc',
+    },
+    {
+      id: 'piaoxue',
+      title: '飘雪',
+      artist: '陈慧娴',
+      url: 'https://music.artist.cc.cd/music/%E9%A3%98%E9%9B%AA%20-%20%E9%99%88%E6%85%A7%E5%A8%B4.mp3',
+      lyrics: 'https://music.artist.cc.cd/music/%E9%A3%98%E9%9B%AA%20-%20%E9%99%88%E6%85%A7%E5%A8%B4.lrc',
+    },
+  ],
+}

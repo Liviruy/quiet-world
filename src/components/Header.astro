@@ -1,0 +1,69 @@
+---
+import { ui } from '@/i18n/ui'
+import { getPageInfo } from '@/utils/page'
+
+const { currentLang, getLocalizedPath, isPost } = getPageInfo(Astro.url.pathname)
+
+const currentUI = ui[currentLang as keyof typeof ui] ?? {}
+const headerTitle = currentUI.title
+const headerSubtitle = currentUI.subtitle
+
+const TitleTag = isPost ? 'h2' : 'h1'
+const SubtitleTag = isPost ? 'div' : 'h2'
+---
+
+<header
+  class:list={[
+    'lg:(uno-desktop-column top-20) cjk:tracking-wide site-header',
+    isPost
+    ? 'mb-10.8'
+    : 'mb-10.5',
+  ]}
+>
+  <TitleTag
+    class:list={[
+      'font-bold font-title',
+      isPost
+        ? `mb-2.8 mt-3 text-5.375 c-secondary lg:(mb-1.8 mt-0 text-9 c-primary)`
+        : `mb-1.8 text-8 c-primary max-[359px]:text-6 lg:(w-full text-9)`,
+    ]}
+  >
+    <!-- Fix text cropping issues during view transition on iOS by adding a div tag -->
+    <div
+      class="box-content inline-block pr-1 max-lg:max-w-[calc(100%-7.25vw-8rem)]"
+      transition:name={`site-title-${currentLang}`}
+      data-disable-theme-toggle-transition
+    >
+      <a
+        id="site-title-link"
+        href={getLocalizedPath('/')}
+        class:list={[
+          'ws-nowrap',
+          // max-width lives on the wrapper above: on the <a> itself, 100%
+          // resolves against the inline-block wrapper (content width) and the
+          // constraint would never bind. 7.25vw + 8rem mirrors the action
+          // icons' right offset plus their row width, so nothing is starved
+          // and the 4-glyph Chinese title always fits on one line.
+          'max-lg:ws-normal max-lg:break-words',
+        ]}
+        data-astro-prefetch="viewport"
+      >
+          {headerTitle}
+      </a>
+    </div>
+  </TitleTag>
+
+  {headerSubtitle && (
+    <SubtitleTag
+      class:list={[
+        'text-3.5 c-secondary font-subtitle lg:text-4',
+        isPost
+        ? `op-0 lg:op-100`
+        : 'w-75% lg:w-full',
+      ]}
+      aria-hidden={isPost}
+    >
+      {headerSubtitle}
+    </SubtitleTag>
+  )}
+</header>

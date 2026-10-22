@@ -1,0 +1,173 @@
+<script>
+const soundTypes = {
+  click: 'tap',
+  typing: 'type',
+}
+
+type SoundType = typeof soundTypes[keyof typeof soundTypes]
+
+const volumeSettings: Record<SoundType, number> = {
+  [soundTypes.click]: 0.8,
+  [soundTypes.typing]: 0.4,
+}
+
+const clickTargets = [
+  '#music-toggle',
+  '#language-switcher',
+  '#palette-switcher',
+  '#theme-toggle-button',
+  '#back-to-top',
+]
+
+const typingTargets = [
+  // Twikoo
+  '.el-input__inner',
+  '.el-textarea__inner',
+]
+
+const ignoredKeys = new Set([
+  'Shift',
+  'Control',
+  'Alt',
+  'Meta',
+  'Tab',
+  'Escape',
+  'CapsLock',
+])
+
+const clickSelector = clickTargets.join(',')
+const typingSelector = typingTargets.join(',')
+
+// One MediaQueryList for the session; matchMedia() allocates a new object per call.
+const mobileQuery = window.matchMedia('(max-width: 1023px)')
+
+function isMobileDevice(): boolean {
+  return mobileQuery.matches
+}
+
+function getBasePath(): string {
+  // Vite replaces BASE_URL with the site `base` at build time (e.g. '/' or
+  // '/blog'). The previous lookup keyed off a <link rel="sitemap"> that the
+  // head never renders, so it silently returned '' for every deployment.
+  return import.meta.env.BASE_URL.replace(/\/+$/, '')
+}
+
+class SoundEffectManager {
+  private audioContext: AudioContext | null = null
+  private audioBuffers: Record<SoundType, AudioBuffer[]> = {
+    [soundTypes.click]: [],
+    [soundTypes.typing]: [],
+  }
+
+  private initPromise: Promise<void> | null = null
+
+  // Fetch, decode and cache a single sound file
+  private async fetchAndCacheSound(type: SoundType, index: number): Promise<void> {
+    if (!this.audioContext) {
+      throw new Error('Audio context not initialized')
+    }
+
+    const soundId = `${type}_0${index + 1}`
+    const response = await fetch(`${getBasePath()}/sounds/${soundId}.wav`)
+    const arrayBuffer = await response.arrayBuffer()
+    const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer)
+    this.audioBuffers[type].push(audioBuffer)
+  }
+
+  // Load one variant only when the user first triggers this sound type.
+  private async ensureSound(type: SoundType): Promise<void> {
+    if (!this.audioBuffers[type].length) {
+      const index = Math.floor(Math.random() * 5)
+      await this.fetchAndCacheSound(type, index)
+    }
+  }
+
+  // Initialize the audio context on demand after a real user interaction.
+  private async initialize(): Promise<void> {
+    return this.initPromise ??= (async () => {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext
+      this.audioContext = new AudioContextClass()
+    })()
+  }
+
+  // Play a random sound of the specified type
+  public async playSound(soundType: SoundType): Promise<void> {
+    try {
+      await this.initialize()
+
+      if (!this.audioContext) {
+        return
+      }
+
+      // Resume audio context if suspended
+      if (this.audioContext.state === 'suspended') {
+        await this.audioContext.resume()
+      }
+
+      await this.ensureSound(soundType)
+
+      // Get matching sound buffers for the requested type
+      const buffers = this.audioBuffers[soundType]
+      if (buffers.length === 0) {
+        return
+      }
+
+      // Select random sound from available buffers
+      const source = this.audioContext.createBufferSource()
+      source.buffer = buffers[Math.floor(Math.random() * buffers.length)]
+
+      // Create and configure audio nodes
+      const gainNode = this.audioContext.createGain()
+      gainNode.gain.value = volumeSettings[soundType]
+
+      // Connect nodes and play sound
+      source.connect(gainNode).connect(this.audioContext.destination)
+      source.start(0)
+    }
+    catch (error) {
+      console.warn('Sound playback failed:', error)
+    }
+  }
+}
+
+const soundManager = new SoundEffectManager()
+
+// Handle click events on interactive elements
+function handleGlobalClick(event: MouseEvent) {
+  if (isMobileDevice()) {
+    return
+  }
+
+  const target = event.target instanceof Element ? event.target : null
+  if (!target?.closest(clickSelector)) {
+    return
+  }
+
+  soundManager.playSound(soundTypes.click)
+}
+
+// Handle keyboard events for typing sounds
+function handleGlobalKeydown(event: KeyboardEvent) {
+  if (isMobileDevice()) {
+    return
+  }
+
+  if (event.ctrlKey || event.altKey || event.metaKey) {
+    return
+  }
+
+  if (ignoredKeys.has(event.key)) {
+    return
+  }
+
+  const target = event.target instanceof Element ? event.target : null
+  if (!target?.closest(typingSelector)) {
+    return
+  }
+
+  soundManager.playSound(soundTypes.typing)
+}
+
+document.addEventListener('click', handleGlobalClick)
+document.addEventListener('keydown', handleGlobalKeydown)
+</script>

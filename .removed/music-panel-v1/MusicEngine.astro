@@ -1,0 +1,211 @@
+---
+import howlerUrl from 'howler/dist/howler.core.min.js?url'
+import { musicTracks } from '@/data/music'
+---
+
+<!-- One Howl for the whole site: the floating music panel (MusicPanel.astro)
+     drives it, so playback state is shared everywhere and audio survives
+     ClientRouter swaps. -->
+<div
+  id="quiet-music-engine"
+  hidden
+  aria-hidden="true"
+  data-howler-url={howlerUrl}
+  data-tracks={JSON.stringify(musicTracks)}
+/>
+
+<script is:inline data-astro-rerun>
+(function () {
+  if (window.__quietMusic) {
+    // ClientRouter swaps wipe inline <html> classes — re-assert the playing one.
+    window.__quietMusic.resync()
+    return
+  }
+
+  const node = document.getElementById('quiet-music-engine')
+  const tracks = JSON.parse(node?.dataset.tracks || '[]')
+  const howlerUrl = node?.dataset.howlerUrl || ''
+
+  let index = 0
+  let howl = null
+  let howlerLoading = null
+  let playing = false
+  let failed = false
+  let duration = 0
+  let shuffle = false
+
+  function pickNextIndex() {
+    if (!shuffle || tracks.length < 2) {
+      return index + 1
+    }
+    let k = Math.floor(Math.random() * tracks.length)
+    if (k === index) {
+      k = (k + 1) % tracks.length
+    }
+    return k
+  }
+
+  let volume = 0.7
+  try {
+    const saved = Number.parseFloat(localStorage.getItem('quiet-world-music-volume') || '')
+    if (Number.isFinite(saved)) {
+      volume = Math.max(0, Math.min(1, saved))
+    }
+  }
+  catch {
+    // Storage may be unavailable in private browsing contexts.
+  }
+
+  function emit() {
+    document.documentElement.classList.toggle('music-playing', playing && !failed)
+    document.dispatchEvent(new CustomEvent('quiet-music-change'))
+  }
+
+  function ensureHowler() {
+    if (window.Howl) {
+      return Promise.resolve()
+    }
+    if (!howlerLoading) {
+      howlerLoading = new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = howlerUrl
+        script.onload = resolve
+        script.onerror = () => {
+          howlerLoading = null
+          reject(new Error('failed to load howler'))
+        }
+        document.head.appendChild(script)
+      })
+    }
+    return howlerLoading
+  }
+
+  function loadTrack(nextIndex, autoplay) {
+    if (tracks.length === 0) {
+      return
+    }
+    index = ((nextIndex % tracks.length) + tracks.length) % tracks.length
+    const track = tracks[index]
+
+    ensureHowler().then(() => {
+      if (howl) {
+        howl.off()
+        howl.unload()
+      }
+      failed = false
+      duration = 0
+      // html5 mode streams through <audio>: R2 serves Range requests, so no
+      // CORS fetch/Web Audio buffering is involved.
+      howl = new window.Howl({
+        src: [track.src],
+        html5: true,
+        volume,
+        onload() {
+          // The load callback receives a sound id, not a duration.
+          duration = howl.duration() || 0
+          emit()
+        },
+        onplay() {
+          playing = true
+          failed = false
+          emit()
+        },
+        onpause() {
+          playing = false
+          emit()
+        },
+        onend() {
+          loadTrack(pickNextIndex(), true)
+        },
+        onloaderror() {
+          playing = false
+          failed = true
+          emit()
+        },
+        onplayerror() {
+          playing = false
+          failed = true
+          emit()
+        },
+      })
+      if (autoplay) {
+        howl.play()
+      }
+      emit()
+    }).catch(() => {
+      failed = true
+      emit()
+    })
+  }
+
+  window.__quietMusic = {
+    tracks,
+    index() {
+      return index
+    },
+    isPlaying() {
+      return playing && !failed
+    },
+    isFailed() {
+      return failed
+    },
+    duration() {
+      return duration
+    },
+    current() {
+      if (!howl) {
+        return 0
+      }
+      const value = Number(howl.seek())
+      return Number.isFinite(value) ? value : 0
+    },
+    seekTo(seconds) {
+      if (howl && duration > 0) {
+        howl.seek(Math.max(0, Math.min(duration, seconds)))
+        emit()
+      }
+    },
+    playTrack(nextIndex) {
+      loadTrack(nextIndex, true)
+    },
+    isShuffle() {
+      return shuffle
+    },
+    toggleShuffle() {
+      shuffle = !shuffle
+      emit()
+    },
+    volume() {
+      return volume
+    },
+    setVolume(next) {
+      volume = Math.max(0, Math.min(1, next))
+      try {
+        localStorage.setItem('quiet-world-music-volume', String(volume))
+      }
+      catch {
+        // Storage may be unavailable in private browsing contexts.
+      }
+      if (howl) {
+        howl.volume(volume)
+      }
+      emit()
+    },
+    toggle() {
+      if (!howl || failed) {
+        loadTrack(index, true)
+        return
+      }
+      if (howl.playing()) {
+        howl.pause()
+      }
+      else {
+        howl.play()
+      }
+    },
+    resync() {
+      document.documentElement.classList.toggle('music-playing', playing && !failed)
+    },
+  }
+})()
+</script>

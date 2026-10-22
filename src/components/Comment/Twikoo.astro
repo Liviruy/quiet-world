@@ -1,0 +1,153 @@
+---
+import twikooCSS from 'twikoo/dist/twikoo.css?url'
+import twikooJS from 'twikoo/dist/twikoo.nocss.js?url' // Using twikoo.min.js causes CSS loading failure after page switching
+import { allLocales, base, defaultLocale, themeConfig } from '@/config'
+import { twikooLocaleMap } from '@/i18n/config'
+
+const { envId = '' } = themeConfig.comment.twikoo ?? {}
+
+// Remove locale prefix from path
+const currentPath = Astro.url.pathname
+const localePattern = new RegExp(`\\/(${allLocales.join('|')})\\/`)
+const twikooPath = currentPath.replace(localePattern, '/')
+
+// Determine language
+const pathWithoutBase = base && currentPath.startsWith(base)
+  ? currentPath.slice(base.length)
+  : currentPath
+const matchedLang = Object.keys(twikooLocaleMap).find(code => pathWithoutBase.startsWith(`/${code}/`))
+const lang = (matchedLang ?? defaultLocale) as keyof typeof twikooLocaleMap
+
+const twikooConfig = {
+  envId,
+  path: twikooPath,
+  lang: twikooLocaleMap[lang],
+  twikooCSS,
+  twikooJS,
+}
+---
+
+<!-- Class not working on twikoo div -->
+<div
+  id="twikoo-wrapper"
+  class="no-heti mt-16"
+  data-config={JSON.stringify(twikooConfig)}
+>
+  <div id="twikoo" />
+</div>
+
+<script>
+interface TwikooGlobal {
+  init: (options: Record<string, unknown>) => void
+}
+
+let twikooObserver: IntersectionObserver | null = null
+let twikooWrapper: HTMLElement | null = null
+let twikooScript: Promise<void> | null = null
+
+// The mount point is `<div id="twikoo">`, and named access on `window` means
+// `window.twikoo` already resolves to that element before the bundle loads.
+// Only a callable `init` counts as "the library is here".
+function twikooApi(): TwikooGlobal | undefined {
+  const candidate = (window as unknown as { twikoo?: Partial<TwikooGlobal> }).twikoo
+  return typeof candidate?.init === 'function' ? candidate as TwikooGlobal : undefined
+}
+
+// The bundle is ~575 KB and the comment box sits far below the fold, so the
+// download starts only once the wrapper is in reach. Before this the tag was
+// rendered in the page body, which made every article pay for it up front.
+function loadTwikooScript(src: string): Promise<void> {
+  twikooScript ??= new Promise<void>((resolve, reject) => {
+    if (twikooApi()) {
+      resolve()
+      return
+    }
+    const script = document.createElement('script')
+    script.src = src
+    script.addEventListener('load', () => {
+      if (twikooApi()) {
+        resolve()
+      }
+      else {
+        twikooScript = null
+        script.remove()
+        reject(new Error('[Twikoo] Script loaded but exposed no init()'))
+      }
+    }, { once: true })
+    script.addEventListener('error', () => {
+      // Let a later scroll or navigation try again instead of caching the failure.
+      twikooScript = null
+      script.remove()
+      reject(new Error('[Twikoo] Failed to load script'))
+    }, { once: true })
+    document.head.append(script)
+  })
+  return twikooScript
+}
+
+async function setupTwikoo(twikooJS: string) {
+  const twikooWrapper = document.getElementById('twikoo-wrapper')
+  if (!twikooWrapper || !twikooWrapper.dataset.config) {
+    return
+  }
+
+  try {
+    const config = JSON.parse(twikooWrapper.dataset.config)
+    const { envId, path, lang } = config
+
+    await loadTwikooScript(twikooJS)
+    twikooApi()?.init({
+      envId,
+      el: '#twikoo',
+      // region: 'ap-shanghai', // Specify for Tencent Cloud, omit for Vercel
+      path,
+      lang,
+    })
+  }
+  catch (error) {
+    console.error('[Twikoo] Failed to initialize:', error)
+  }
+}
+
+// Lazy load Twikoo when the wrapper enters viewport
+function lazySetupTwikoo() {
+  twikooWrapper = document.getElementById('twikoo-wrapper')
+  if (!twikooWrapper || !twikooWrapper.dataset.config) {
+    return
+  }
+
+  const config = JSON.parse(twikooWrapper.dataset.config)
+  const { twikooCSS, twikooJS } = config
+
+  twikooObserver = new IntersectionObserver((entries) => {
+    if (entries.some(entry => entry.isIntersecting)) {
+      twikooObserver?.disconnect()
+      twikooObserver = null
+      // Stylesheet joins the same lazy pass — it only decorates the widget.
+      if (!document.getElementById('twikoo-css')) {
+        const link = document.createElement('link')
+        link.id = 'twikoo-css'
+        link.rel = 'stylesheet'
+        link.href = twikooCSS
+        document.head.append(link)
+      }
+      void setupTwikoo(twikooJS)
+    }
+  }, { rootMargin: '500px' })
+
+  twikooObserver.observe(twikooWrapper)
+}
+
+function cleanupTwikoo() {
+  twikooObserver?.disconnect()
+  twikooObserver = null
+
+  if (twikooWrapper) {
+    twikooWrapper.innerHTML = ''
+    twikooWrapper = null
+  }
+}
+
+document.addEventListener('astro:page-load', lazySetupTwikoo)
+document.addEventListener('astro:before-swap', cleanupTwikoo)
+</script>

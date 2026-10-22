@@ -1,0 +1,150 @@
+/* View Transition: theme toggle reveal >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> */
+@keyframes reveal {
+  from {
+    clip-path: inset(var(--from));
+  }
+}
+
+::view-transition-new(theme-toggle-transition) {
+  z-index: 99;
+  clip-path: inset(0 0 0 0);
+  animation: reveal 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+::view-transition-old(theme-toggle-transition) {
+  z-index: -1;
+  animation: none;
+}
+
+html.dark {
+  --from: 0 0 100% 0;
+}
+html:not(.dark) {
+  --from: 100% 0 0 0;
+}
+
+/* Disable animations for special elements during theme switching */
+html[data-theme-changing] [data-disable-theme-toggle-transition] {
+  view-transition-name: none !important;
+}
+
+/* Mobile: skip the root cross-fade entirely. Every swap snapshots the whole
+   page for the View Transition, and on phones that snapshot repaint is slow —
+   the fixed player's backdrop-filter makes each animation frame expensive,
+   which showed up as unresponsive taps when navigating quickly. Instant swaps
+   below 1024px; desktop keeps the native cross-fade. Named groups (the theme
+   arc reveal, the site-title morph) keep their own animations. */
+@media (max-width: 1023.9px) and (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    animation-duration: 0s;
+  }
+}
+
+/* Article entrance >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+   One short, capped reveal. The previous implementation staggered every node up
+   to 0.9s, which left long articles visually empty for almost a second; the
+   version after that disabled everything. This is the middle ground: 0.3s per
+   element, 45ms stagger, total delay capped at 0.25s — the whole article is on
+   screen within ~0.55s while still feeling alive. Regular ClientRouter
+   navigations crossfade via the native View Transition; this only adds a small
+   settle on top. Mobile reads immediately — no choreography before content. */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  #post-date,
+  #toc-container {
+    opacity: 0;
+    animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.05s forwards;
+  }
+
+  #post-content > *:not(.post-nav) {
+    opacity: 0;
+    animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  #post-content > *:not(.post-nav):nth-child(1) { animation-delay: 0s; }
+  #post-content > *:not(.post-nav):nth-child(2) { animation-delay: 0.05s; }
+  #post-content > *:not(.post-nav):nth-child(3) { animation-delay: 0.1s; }
+  #post-content > *:not(.post-nav):nth-child(4) { animation-delay: 0.15s; }
+  #post-content > *:not(.post-nav):nth-child(n+5) { animation-delay: 0.2s; }
+
+  @keyframes fadeInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(0.5rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  #back-button {
+    opacity: 0;
+    animation: fadeInLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+  }
+
+  /* PostNav must not animate: a transform on it broke its CSS Grid track
+     sizing during ClientRouter swaps (see Head.astro's reflow fix). Keep it
+     outside the reveal entirely.
+     NOTE: Do NOT set transform:none here — it would override
+     .post-nav-arrow-right's scaleX(-1) which flips the left arrow icon to
+     point right on the next-post side. */
+  #post-content > .post-nav,
+  #post-content > .post-nav * {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+/* Reduced motion (system preference): everything appears immediately. */
+@media (prefers-reduced-motion: reduce) {
+  #post-date,
+  #toc-container,
+  #back-button,
+  #post-content > * {
+    opacity: 1;
+    animation: none;
+  }
+
+  /* Keep PostNav out of transform overrides — same scaleX(-1) caveat. */
+  #post-content > .post-nav,
+  #post-content > .post-nav * {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+/* Reduced motion (site setting from theme config): same immediate display. */
+html.reduce-motion {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: 150ms;
+
+  .highlight-hover,
+  .highlight-static {
+    transition: inherit;
+  }
+
+  #post-date,
+  #toc-container,
+  #back-button,
+  #post-content > * {
+    opacity: 1;
+    animation: none;
+  }
+
+  #post-content > .post-nav,
+  #post-content > .post-nav * {
+    opacity: 1;
+    animation: none;
+  }
+}

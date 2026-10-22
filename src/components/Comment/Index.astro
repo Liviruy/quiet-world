@@ -1,0 +1,11 @@
+---
+import Twikoo from '@/components/Comment/Twikoo.astro'
+import { themeConfig } from '@/config'
+// Overrides for the #twikoo widget — only needed where comments render.
+import '@/styles/comment.css'
+
+const { enabled, twikoo } = themeConfig.comment
+const showTwikoo = enabled && Boolean((twikoo?.envId ?? '').trim())
+---
+
+{showTwikoo && <Twikoo />}

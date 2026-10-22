@@ -1,0 +1,80 @@
+---
+import PostList from '@/components/PostList.astro'
+import { allLocales } from '@/config'
+import { getLangFromLocale, getLangRouteParam } from '@/i18n/lang'
+import Layout from '@/layouts/Layout.astro'
+import { getPosts } from '@/utils/content'
+
+export async function getStaticPaths() {
+  return allLocales.map(lang => ({
+    params: { lang: getLangRouteParam(lang) },
+  }))
+}
+
+const currentLang = getLangFromLocale(Astro.currentLocale)
+// Keep the homepage in the same newest-to-oldest order used by post navigation.
+// Pinned posts keep their pin icon, but pin priority must not override the date order.
+const allPosts = await getPosts(currentLang)
+const pinnedIds = new Set(
+  allPosts
+    .filter(post => post.data.pin && post.data.pin > 0)
+    .map(post => post.data.abbrlink || post.id),
+)
+---
+
+<Layout>
+  <div class="home-page">
+    <div class="uno-decorative-line" />
+
+    <!-- All Posts -->
+    <PostList posts={allPosts} lang={currentLang} pinnedIds={pinnedIds} />
+  </div>
+</Layout>
+
+<style is:global>
+  .home-page > .uno-decorative-line {
+    margin-bottom: 2.25rem;
+  }
+
+  .home-page .home-post-title {
+    line-height: 1.35;
+    text-wrap: balance;
+  }
+
+  .home-page .home-post-title a {
+    text-decoration-line: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 0.08em;
+    text-underline-offset: 0.18em;
+    transition: text-decoration-color 180ms ease-out, color 180ms ease-out;
+  }
+
+  .home-page .home-post-title:hover a,
+  .home-page .home-post-title a:focus-visible {
+    text-decoration-color: oklch(var(--un-preset-theme-colors-highlight) / 0.9);
+  }
+
+  .home-page .home-post-meta {
+    color: oklch(var(--un-preset-theme-colors-secondary) / 0.72);
+    white-space: nowrap;
+  }
+
+  .home-page .home-post-summary {
+    max-width: 67ch;
+    color: oklch(var(--un-preset-theme-colors-secondary) / 0.86);
+    line-height: 1.75;
+    text-wrap: pretty;
+  }
+
+  @media (max-width: 1023px) {
+    .home-page .home-post-summary {
+      line-height: 1.7;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .home-page .home-post-title a {
+      transition: none;
+    }
+  }
+</style>

@@ -1,0 +1,101 @@
+---
+import type { Language } from '@/i18n/config'
+import Button from '@/components/Button.astro'
+import Footer from '@/components/Footer.astro'
+import Header from '@/components/Header.astro'
+import MusicLauncher from '@/components/music/MusicLauncher.astro'
+import Navbar from '@/components/Navbar.astro'
+import CodeCopyButton from '@/components/Widgets/CodeCopyButton.astro'
+import GithubCard from '@/components/Widgets/GithubCard.astro'
+import ImageZoom from '@/components/Widgets/ImageZoom.astro'
+import MediaEmbed from '@/components/Widgets/MediaEmbed.astro'
+import SoundEffect from '@/components/Widgets/SoundEffect.astro'
+import { themeConfig } from '@/config'
+import Head from '@/layouts/Head.astro'
+import { getPageInfo } from '@/utils/page'
+import '@/styles/font.css'
+import '@/styles/global.css'
+import '@/styles/markdown.css'
+import '@/styles/themes.css'
+import '@/styles/transition.css'
+
+interface Props {
+  postTitle?: string
+  postSlug?: string
+  supportedLangs?: Language[]
+  description?: string
+  publishedTime?: Date
+  updatedTime?: Date
+  tags?: string[]
+}
+
+const {
+  postTitle,
+  postSlug,
+  supportedLangs = [],
+  description,
+  publishedTime,
+  updatedTime,
+  tags,
+} = Astro.props
+const { isPost } = getPageInfo(Astro.url.pathname)
+const fontStyle = themeConfig.global.fontStyle === 'serif' ? 'font-serif' : 'font-sans'
+const MarginBottom = isPost && themeConfig.comment.enabled
+  ? 'mb-10' // Post page with comment
+  : 'mb-12' // Other pages without comment
+---
+
+<html
+  lang={Astro.currentLocale}
+  class:list={[
+    'bg-background',
+    fontStyle,
+    isPost ? 'scroll-smooth' : '',
+  ]}
+>
+  <Head
+    postTitle={postTitle}
+    postSlug={postSlug}
+    description={description}
+    publishedTime={publishedTime}
+    updatedTime={updatedTime}
+    tags={tags}
+  />
+  <body>
+    <div class="bg-highlight" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden"></div>
+    <div
+      class="mx-auto max-w-205.848 min-h-vh w-full min-h-dvh"
+      p="x-[min(7.25vw,3.731rem)] y-10"
+      lg="mx-[max(5.75rem,calc(50vw-34.25rem))] my-20 max-w-[min(calc(75vw-16rem),44rem)] min-h-full p-0"
+    >
+      <Header />
+      <Navbar />
+      <main class={MarginBottom}>
+        <slot />
+      </main>
+      <Footer />
+    </div>
+    <Button supportedLangs={supportedLangs} />
+    <SoundEffect />
+    {isPost && <CodeCopyButton />}
+    {isPost && <GithubCard />}
+    {isPost && <MediaEmbed />}
+    <ImageZoom />
+    <MusicLauncher />
+  </body>
+
+  <script>
+    // "The previous history entry belongs to this site" — needed by every back
+    // affordance. document.referrer is only valid for the first document load:
+    // ClientRouter keeps this same document alive across navigations, so after a
+    // soft swap the referrer still points at wherever the session started (often
+    // empty). The swap event is what proves the earlier entry is ours.
+    window.__onSiteSession = Boolean(
+      document.referrer
+      && new URL(document.referrer, location.href).origin === location.origin,
+    )
+    document.addEventListener('astro:after-swap', () => {
+      window.__onSiteSession = true
+    })
+  </script>
+</html>

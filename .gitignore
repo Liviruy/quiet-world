@@ -1,0 +1,63 @@
+# build output
+dist/
+.output/
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+/build-font-check.log
+/dev-server.*.log
+/preview-server.*.log
+/dist.tar.gz
+
+# environment variables
+.env
+.env.production
+
+# macOS-specific files
+.DS_Store
+
+# IDE
+.idea
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Local-only files (not part of the theme source)
+# These are kept on disk for local use but excluded from version control.
+# ──────────────────────────────────────────────────────────────────────────────
+
+# One-off test/exploration scripts
+/test-*.mjs
+
+# Screenshots and verification artifacts
+/final-verification.png
+
+# Local launcher / personal notes
+/启动博客服务器.bat
+/一键部署.bat
+/R2-D1使用指南.md
+/R2图床搭建指南.md
+/Retypeset使用指南.md
+/内容编辑指南.md
+
+# Wrangler local state (deploy cache + simulated D1/R2 bindings on this machine)
+.wrangler/
+
+# Scratch area for font originals too large to commit (the 25 MB LXGW TTF).
+# Everything scripts/subset-fonts.ts actually reads is committed under
+# src/assets/fonts-full/ instead, so subsets can always be rebuilt.
+scripts/.fonts/
+
+# Self-hosted Waline server deployment (run locally)
+/waline-server/
+
+# Stray file produced by an accidental `> nul` redirect on non-cmd shells
+/nul

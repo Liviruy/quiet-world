@@ -1,0 +1,94 @@
+/* Keep display typography local to the chrome. The reading font is route-scoped
+   in lxgw-wenkai-body.css so article text never downloads these faces. */
+@font-face {
+  font-family: "Snell-Bold";
+  src: url("/fonts/Snell-Bold-SF.woff2?v=20260925c") format("woff2");
+  font-display: swap;
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: "Snell-Black";
+  src: url("/fonts/Snell-Black-SF.woff2?v=20260925c") format("woff2");
+  font-display: swap;
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: "STIX";
+  src: url("/fonts/STIX-VF.woff2?v=20260925c") format("woff2-variations");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400 700;
+  unicode-range: U+0020-007E, U+00A1-00A3, U+00A5, U+00A7-00AB, U+00AE-00B0, U+00B4, U+00B6-00B8, U+00BA-00BB, U+00BF-0107, U+010A-0113, U+0116-011B, U+011E-0123, U+0126-0127, U+012A-012B, U+012E-0131, U+0136-0137, U+0139-013E, U+0141-0148, U+0150-0155, U+0158-015B, U+015E-0161, U+0164-0165, U+016A-016B, U+016E-017E, U+0218-021B, U+0237, U+02BC, U+02C6-02C7, U+02D8-02DD, U+0300-0304, U+0306-0308, U+030A-030C, U+0326-0328, U+037E, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03CE, U+0401-0402, U+0404, U+0406-040B, U+040E-044F, U+0451-0452, U+0454, U+0456-045B, U+045E-045F, U+0490-0491, U+1E80-1E85, U+1E9E, U+1EF2-1EF3, U+2013-2014, U+2018-201A, U+201C-201E, U+2022, U+2026, U+2039-203A, U+20AC, U+2116, U+2122, U+2212, U+25CC;
+}
+
+@font-face {
+  font-family: "STIX-Italic";
+  src: url("/fonts/STIX-Italic-VF.woff2?v=20260925c") format("woff2-variations");
+  font-display: swap;
+  font-style: italic;
+  font-weight: 400 700;
+  unicode-range: U+0020-007E, U+00A1-00A3, U+00A5, U+00A7-00AB, U+00AE-00B0, U+00B4, U+00B6-00B8, U+00BA-00BB, U+00BF-0107, U+010A-0113, U+0116-011B, U+011E-0123, U+0126-0127, U+012A-012B, U+012E-0131, U+0136-0137, U+0139-013E, U+0141-0148, U+0150-0155, U+0158-015B, U+015E-0161, U+0164-0165, U+016A-016B, U+016E-017E, U+0218-021B, U+0237, U+02BC, U+02C6-02C7, U+02D8-02DD, U+0300-0304, U+0306-0308, U+030A-030C, U+0326-0328, U+037E, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03CE, U+0401-0402, U+0404, U+0406-040B, U+040E-044F, U+0451-0452, U+0454, U+0456-045B, U+045E-045F, U+0490-0491, U+1E80-1E85, U+1E9E, U+1EF2-1EF3, U+2013-2014, U+2018-201A, U+201C-201E, U+2022, U+2026, U+2039-203A, U+20AC, U+2116, U+2122, U+2212, U+25CC;
+}
+
+/* Only the Chinese glyphs visible in the initial site chrome are mapped here, as
+   one merged subset: the ten "one glyph per file" slices each carried the whole
+   variable-font skeleton (403,712 B over 10 requests). Regenerate with
+   `tsx scripts/subset-chrome-font.ts` and keep unicode-range in sync with it. */
+@font-face {
+  font-family: "EarlySummer";
+  src: url("/fonts/EarlySummer-Chrome.woff2") format("woff2-variations");
+  font-display: swap;
+  font-weight: 400 700;
+  unicode-range: U+4E00, U+4E16, U+4E8E, U+5173, U+5904, U+5B89, U+5F71, U+6444, U+6587, U+6E05, U+6E38, U+754C, U+7AE0, U+843D, U+89C5, U+89D2, U+8BB0, U+9759;
+}
+
+/* Space-only faces for the Chinese chrome >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+   A CJK-only element still makes the browser probe every family in front of
+   EarlySummer for its invisible layout space. Snell/STIX cover U+0020, so all
+   three full faces were downloaded on every zh page just to render whitespace
+   (52 KB). These subsets keep that exact space glyph and advance (verified:
+   330, 235, 225 units) but nothing else. The zh stacks below put EarlySummer
+   first so CJK glyphs resolve there; a latin character still falls through to
+   the full face and renders exactly as before. Space-only files are derived
+   from the shipped subsets (not a full regeneration) and only for U+0020, so
+   they never replace a real face. `pnpm subset-fonts` rebuilds them after the
+   full faces; if their bytes change, bump all three ?v= keys together. */
+@font-face {
+  font-family: "Snell-Black-Space";
+  src: url("/fonts/Snell-Black-Space.woff2?v=20261021") format("woff2");
+  font-display: swap;
+  font-weight: 700;
+  unicode-range: U+0020;
+}
+
+@font-face {
+  font-family: "STIX-Space";
+  src: url("/fonts/STIX-Space.woff2?v=20261021") format("woff2");
+  font-display: swap;
+  font-weight: 400 700;
+  unicode-range: U+0020;
+}
+
+@font-face {
+  font-family: "STIX-Italic-Space";
+  src: url("/fonts/STIX-Italic-Space.woff2?v=20261021") format("woff2");
+  font-display: swap;
+  font-style: italic;
+  font-weight: 400 700;
+  unicode-range: U+0020;
+}
+
+/* Keep these stacks in sync with the fontFamily entries in uno.config.ts. */
+html:lang(zh) .font-title {
+  font-family: "EarlySummer", "Snell-Black-Space", "Snell-Black", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
+html:lang(zh) .font-subtitle {
+  font-family: "EarlySummer", "STIX-Space", "STIX", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
+html:lang(zh) .font-navbar {
+  font-family: "EarlySummer", "STIX-Italic-Space", "STIX-Italic", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+}

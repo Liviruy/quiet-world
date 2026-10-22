@@ -1,0 +1,39 @@
+/* Load the readable Chinese body face only on article-like routes — and only
+   when the page language is Chinese. The face is a subset of LXGW WenKai GB
+   (霞鹜文楷 GB) covering every code point in src/content + the UI strings + the
+   travelogue/photo/music copy in src/data, plus all of printable ASCII, so it
+   renders ~375 KB where the full face would be tens of MB.
+
+   The 1.4 MB woff2 this replaced was itself an early subset of only 2,947 code
+   points, so 228 hanzi used in the articles had never rendered in this face —
+   they fell back to the system font mid-sentence. Regenerate after adding
+   Chinese content with `pnpm subset-fonts`, and keep the source pinned to the
+   GB edition: the same-version non-GB release is a different set of outlines. */
+@font-face {
+  font-family: 'LXGW WenKai Body';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('/fonts/lxgw-wenkai-body-400.woff2?v=20260925e') format('woff2');
+}
+
+/* The article face is injected per post by scripts/subset-post-fonts.ts; this
+   default keeps dev and any skipped build on the full subset. The full face
+   stays second in the stack as the missing-glyph fallback. */
+#post-content {
+  --reading-font: 'LXGW WenKai Body';
+}
+
+html:lang(zh) #post-content :where(p, blockquote, li, td, th, figcaption, dt, dd) {
+  font-family: var(--reading-font), 'LXGW WenKai Body', ui-sans-serif, system-ui, sans-serif;
+}
+
+html:lang(zh) .detail-description {
+  font-family: 'LXGW WenKai Body', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Comments are user-written and must not be limited to the article's subset.
+   They keep the full face; this variable wins inside the comment widget. */
+#twikoo-wrapper {
+  --reading-font: 'LXGW WenKai Body';
+}

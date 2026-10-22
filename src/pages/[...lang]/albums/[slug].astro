@@ -1,0 +1,245 @@
+---
+import type { GetStaticPathsResult } from 'astro'
+import type { Album } from '@/data/albums'
+import GoBackIcon from '@/assets/icons/go-back.svg'
+import { allLocales } from '@/config'
+import { albums, formatAlbumDate, getAlbumCopy } from '@/data/albums'
+import { getLangFromLocale, getLangRouteParam } from '@/i18n/lang'
+import { getLocalizedPath } from '@/i18n/path'
+import Layout from '@/layouts/Layout.astro'
+import { getR2ImagePath, getR2ThumbnailSrcSet, getR2ThumbnailUrl } from '@/utils/r2-images'
+import '@/styles/lxgw-wenkai-album.css'
+import '@/styles/lxgw-wenkai-body.css'
+
+export async function getStaticPaths(): Promise<GetStaticPathsResult> {
+  return allLocales.flatMap(lang =>
+    albums.map(album => ({
+      params: {
+        lang: getLangRouteParam(lang),
+        slug: album.slug,
+      },
+    })),
+  )
+}
+
+const { slug } = Astro.params
+const currentLang = getLangFromLocale(Astro.currentLocale)
+
+const album: Album | undefined = albums.find(a => a.slug === slug)
+const copy = album ? getAlbumCopy(album, currentLang) : null
+const backLink = getLocalizedPath('/albums/', currentLang)
+const backLabel = currentLang === 'en' ? 'Back to albums' : '返回相册'
+---
+
+<Layout>
+  <div class="uno-decorative-line" />
+
+  {album
+? (
+    <div class="album-detail">
+      <!-- Title with inline Back Chevron -->
+      <h1 class="detail-title">
+        <a href={backLink} class="title-back-link" aria-label={backLabel}>
+          <GoBackIcon aria-hidden="true" fill="currentColor" class="back-chevron" />
+        </a>
+        {copy?.title}
+      </h1>
+
+      <div class="detail-meta">
+        <span class="flex items-center gap-1.5">
+          <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          {copy?.location}
+        </span>
+        <time datetime={album.date}>{formatAlbumDate(album.date, currentLang)}</time>
+      </div>
+
+      <!-- Hero Image -->
+      <div class="hero-image-wrapper">
+        <img
+          src={getR2ThumbnailUrl(getR2ImagePath(album.imageId), 1200)}
+          srcset={getR2ThumbnailSrcSet(getR2ImagePath(album.imageId), [640, 960, 1200])}
+          sizes="(max-width: 1024px) 100vw, 44rem"
+          alt={copy?.title}
+          class="hero-image"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+        />
+      </div>
+
+      <!-- Description (WenKai font) -->
+      <p class="detail-description">{copy?.description}</p>
+
+      <!-- Tags -->
+      <div class="detail-tags">
+        {copy?.tags.map(tag => (
+          <span class="tag">#{tag}</span>
+        ))}
+      </div>
+    </div>
+  )
+: (
+    <div class="not-found">
+      <h2>{currentLang === 'en' ? 'Not Found' : '未找到相册'}</h2>
+      <p>{currentLang === 'en' ? 'The album you are looking for does not exist.' : '你要找的相册不存在。'}</p>
+      <a href={backLink} class="title-back-link"><GoBackIcon aria-hidden="true" fill="currentColor" class="back-chevron" /></a>
+    </div>
+  )}
+</Layout>
+
+<style is:global>
+  .album-detail {
+    padding-bottom: 3rem;
+  }
+
+  /* ── Title with Back Chevron ── */
+  .detail-title {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.03em;
+    color: var(--theme-primary);
+  }
+
+  .title-back-link {
+    display: inline-flex;
+    align-items: center;
+    color: var(--theme-secondary);
+    opacity: 0.5;
+    text-decoration: none;
+    transition: color 0.2s ease, opacity 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .title-back-link:hover {
+    color: var(--theme-primary);
+    opacity: 1;
+  }
+
+  .back-chevron {
+    width: 1.1rem;
+    height: 1.1rem;
+    display: block;
+  }
+
+  /* ── Meta ── */
+  .detail-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.25rem;
+    font-size: 0.85rem;
+    color: var(--theme-secondary);
+    opacity: 0.7;
+    margin-bottom: 1.5rem;
+  }
+
+  .detail-meta svg {
+    opacity: 0.6;
+  }
+
+  /* ── Hero Image ── */
+  .hero-image-wrapper {
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    background: var(--theme-secondary);
+  }
+
+  .hero-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+
+  /* ── Description (font comes from lxgw-wenkai-body.css) ── */
+  .detail-description {
+    font-size: 1.125rem;
+    line-height: 1.8;
+    color: var(--theme-secondary);
+    margin-bottom: 2rem;
+  }
+
+  /* ── Tags ── */
+  .detail-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .tag {
+    font-size: 0.82rem;
+    color: var(--theme-secondary);
+    opacity: 0.7;
+    padding: 0.2rem 0.6rem;
+    border: 1px solid var(--theme-secondary);
+    border-radius: 4px;
+    transition: all 0.2s ease;
+  }
+
+  .tag:hover {
+    opacity: 1;
+    color: var(--theme-primary);
+    border-color: var(--theme-primary);
+  }
+
+  /* ── Not Found ── */
+  .not-found {
+    text-align: center;
+    padding: 3rem 0;
+    color: var(--theme-secondary);
+  }
+
+  .not-found h2 {
+    font-size: 1.5rem;
+    color: var(--theme-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  .not-found p {
+    margin-bottom: 1rem;
+  }
+
+  @media (max-width: 640px) {
+    .detail-title {
+      font-size: 1.35rem;
+    }
+  }
+</style>
+
+<script>
+// The ← chevron is a real /albums/ link so it still works without JS and on
+// middle-click. With JS we take an actual history step instead: a forward
+// navigation re-renders the list at the top and throws away where the reader had
+// scrolled.
+if (!window.__albumBackStepRegistered) {
+  window.__albumBackStepRegistered = true
+
+  // Capture phase on purpose: ClientRouter also listens for clicks on document
+  // (registered earlier, in the head) and skips links whose default is already
+  // prevented. Handling it first is what lets preventDefault win the race.
+  document.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)) {
+      return
+    }
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+      return
+    }
+    if (!event.target.closest('.title-back-link')) {
+      return
+    }
+    if (window.history.length > 1 && window.__onSiteSession) {
+      event.preventDefault()
+      window.history.back()
+    }
+  }, true)
+}
+</script>

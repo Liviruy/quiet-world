@@ -1,0 +1,21 @@
+/* Travelogue description face >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+   Album descriptions are ~60 Chinese characters, so they use a small subset of
+   the same LXGW WenKai GB source (scripts/subset-fonts.ts, pool: 'album') instead
+   of the ~375 KB article face. If a future description reaches a character the
+   subset does not hold, the browser falls through to the full body face, which
+   still renders the same outlines — no system-font fallback, no visual change.
+   Regenerate with `pnpm subset-fonts` after editing src/data/albums.ts and bump
+   this ?v= key (and the one in Head.astro). */
+@font-face {
+  font-family: 'LXGW WenKai Album';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('/fonts/lxgw-wenkai-album-400.woff2?v=20261021') format('woff2');
+}
+
+/* Higher specificity than the .detail-description rule in
+   lxgw-wenkai-body.css, which keeps the full face available as the fallback. */
+html:lang(zh) .album-detail .detail-description {
+  font-family: 'LXGW WenKai Album', 'LXGW WenKai Body', ui-sans-serif, system-ui, sans-serif;
+}

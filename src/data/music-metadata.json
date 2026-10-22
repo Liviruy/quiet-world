@@ -1,0 +1,321 @@
+{
+  "version": 1,
+  "tracks": {
+    "aidegushishangji": {
+      "title": "爱的故事 (上集)",
+      "artist": "孙耀威",
+      "queriedAt": "2026-09-24T16:33:34.222Z",
+      "album": "HITS-SIXTEEN",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/cc/47/6f/cc476f9f-70a5-7060-4f1c-10bd4196c35f/196872801156.jpg/300x300bb.jpg",
+      "trackId": "1803320178",
+      "collectionId": "1803320172",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "bimurushen": {
+      "title": "闭目入神",
+      "artist": "郑中基",
+      "queriedAt": "2026-09-24T16:33:34.786Z",
+      "album": "鑑聽寶典 Collection",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/8a/a3/a3/8aa3a363-5183-6e80-aa5c-0da1e8c21e4b/825646139743.jpg/300x300bb.jpg",
+      "trackId": "964407440",
+      "collectionId": "964407314",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "bishaji": {
+      "title": "必杀技",
+      "artist": "古巨基",
+      "queriedAt": "2026-09-24T16:33:35.338Z",
+      "album": "勁歌. 金曲2 : 情歌王",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/06/59/7d/06597d7e-156d-0e75-4b9a-c64ed1bab51b/825646226405.jpg/300x300bb.jpg",
+      "trackId": "1532423368",
+      "collectionId": "1532423363",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "bulangmanzuiming": {
+      "title": "不浪漫罪名",
+      "artist": "王杰",
+      "queriedAt": "2026-09-24T16:31:21.696Z",
+      "album": "Giving",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music/v4/23/1a/2b/231a2b7e-70f0-c384-65d5-e135edc3a712/EEG1087DSD-GIVING-.jpg/300x300bb.jpg",
+      "trackId": "548360918",
+      "collectionId": "548360656",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "chulianqingren": {
+      "title": "初恋情人",
+      "artist": "刘小慧",
+      "queriedAt": "2026-09-24T16:31:31.654Z",
+      "album": "真經典: 劉小慧",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/76/cb/a6/76cba69e-86da-0427-af84-38c0c4985c1c/00731458922629.rgb.jpg/300x300bb.jpg",
+      "trackId": "1444038261",
+      "collectionId": "1444038253",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "chunjiaoyuzhiming": {
+      "title": "春娇与志明",
+      "artist": "街道办GDC / 欧阳耀莹",
+      "queriedAt": "2026-09-22T14:39:57.543Z",
+      "album": "春嬌與志明 - Single",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/f7/58/47/f758475d-86e7-57a9-c93e-11bc390cad6e/4894859237368.jpg/300x300bb.jpg",
+      "trackId": "1770687709",
+      "collectionId": "1770687678",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "dangnianqing": {
+      "title": "当年情",
+      "artist": "张国荣",
+      "queriedAt": "2026-09-24T16:31:47.396Z",
+      "album": null,
+      "cover": null,
+      "trackId": null,
+      "collectionId": null,
+      "matchStatus": "not_found",
+      "source": null
+    },
+    "duijiqinggan": {
+      "title": "堆积情感",
+      "artist": "邝美云",
+      "queriedAt": "2026-09-24T16:31:39.520Z",
+      "album": "堆積情感",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music128/v4/c4/44/6d/c4446d9b-065a-89f3-bda8-6ced6f9372e3/00602567032014.rgb.jpg/300x300bb.jpg",
+      "trackId": "1442666010",
+      "collectionId": "1442666004",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "fenfenzhongxuoyaoni": {
+      "title": "分分钟需要你",
+      "artist": "林忆莲",
+      "queriedAt": "2026-09-24T16:31:29.745Z",
+      "album": "分分鐘需要你 - Single",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music113/v4/26/44/93/26449392-cbbe-1004-da3b-a0815c1e474d/00602488896603.rgb.jpg/300x300bb.jpg",
+      "trackId": "1467955826",
+      "collectionId": "1467955519",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "fushishanxia": {
+      "title": "富士山下",
+      "artist": "陈奕迅",
+      "queriedAt": "2026-09-24T16:31:43.509Z",
+      "album": "What's Going On...? (Remastered 2019)",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music123/v4/3d/c8/b2/3dc8b298-9e3f-8cc4-c2bf-bed01bfe7f49/19UM1IM04340.rgb.jpg/300x300bb.jpg",
+      "trackId": "1490822088",
+      "collectionId": "1490822079",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "haikuotiankong": {
+      "title": "海阔天空",
+      "artist": "BEYOND",
+      "queriedAt": "2026-09-24T16:31:53.323Z",
+      "album": "Rock'n'Roll",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Features124/v4/9f/6d/62/9f6d62cd-c6fd-1037-fe9b-df8d6d752a3c/dj.isfwsfsf.jpg/300x300bb.jpg",
+      "trackId": "201575679",
+      "collectionId": "201575258",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "haoxinfenshou": {
+      "title": "好心分手",
+      "artist": "卢巧音 / 王力宏",
+      "queriedAt": "2026-09-24T16:31:41.518Z",
+      "album": "Four Seasons in One Day",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music/v4/83/18/aa/8318aa63-bdd4-8bd0-a8cc-ecc69900a32a/884977315844.jpg/300x300bb.jpg",
+      "trackId": "532911544",
+      "collectionId": "532910820",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "jiebudiao": {
+      "title": "戒不掉",
+      "artist": "欧阳耀莹",
+      "queriedAt": "2026-09-22T14:40:02.806Z",
+      "album": "戒不掉 (原聲版) - Single",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/0a/c7/fa/0ac7faa5-1643-a833-3d39-18605fd9f007/4894944191964.jpg/300x300bb.jpg",
+      "trackId": "1698329905",
+      "collectionId": "1698329901",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "manburenshenglu": {
+      "title": "漫步人生路",
+      "artist": "邓丽君",
+      "queriedAt": "2026-09-24T16:31:55.374Z",
+      "album": "君之千言萬語 - 粵語",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/ff/9d/5e/ff9d5eb9-75aa-fdec-2b9a-4e672d99f03c/13UAAIM06760.rgb.jpg/300x300bb.jpg",
+      "trackId": "1443325614",
+      "collectionId": "1443325035",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "nandeyouqingren": {
+      "title": "难得有情人",
+      "artist": "关淑怡",
+      "queriedAt": "2026-09-24T16:33:36.080Z",
+      "album": "難得有情人",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music128/v4/6e/6e/31/6e6e317e-f2dc-dcbc-dfa9-f49800a07246/00602488607988.rgb.jpg/300x300bb.jpg",
+      "trackId": "1442531578",
+      "collectionId": "1442531574",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "pianpianxihuan": {
+      "title": "偏偏喜欢你",
+      "artist": "陈百强",
+      "queriedAt": "2026-09-24T16:31:25.637Z",
+      "album": "偏偏喜歡你",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music/v4/ef/75/b0/ef75b0b7-1b63-155f-3551-e437433a3825/825646365180.jpg/300x300bb.jpg",
+      "trackId": "726243548",
+      "collectionId": "726243514",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "piaoxue": {
+      "title": "飘雪",
+      "artist": "陈慧娴",
+      "queriedAt": "2026-09-24T16:32:21.349Z",
+      "album": "歸來吧",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/4b/e6/db/4be6db8a-24f4-5cb5-5e88-aa9c6fcf4ddc/00731451324727.rgb.jpg/300x300bb.jpg",
+      "trackId": "1444202072",
+      "collectionId": "1444201946",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "qianqianquege": {
+      "title": "千千阕歌",
+      "artist": "陈慧娴",
+      "queriedAt": "2026-09-24T16:31:33.654Z",
+      "album": "復黑王: 永遠是你的",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/b2/0f/54/b20f5464-df85-fc41-06f2-7fa72967cd68/00602527111193.rgb.jpg/300x300bb.jpg",
+      "trackId": "1442640792",
+      "collectionId": "1442640610",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "qingrenzhiji": {
+      "title": "情人知己",
+      "artist": "叶蒨文",
+      "queriedAt": "2026-09-24T16:31:51.309Z",
+      "album": "華納廿三週年紀念精選系列: 葉蒨文",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music6/v4/ea/71/00/ea71001f-f3ac-f50f-1b13-086fbc844407/dj.oxwccjis.jpg/300x300bb.jpg",
+      "trackId": "201994115",
+      "collectionId": "201994083",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "renshenghechubuxiangfeng": {
+      "title": "人生何处不相逢",
+      "artist": "陈慧娴",
+      "queriedAt": "2026-09-24T16:31:23.677Z",
+      "album": "音樂大全101: 陳慧嫻",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music118/v4/2f/7e/d5/2f7ed53e-7365-47f2-0907-117ce23b7d3d/00602488999557.rgb.jpg/300x300bb.jpg",
+      "trackId": "1443436438",
+      "collectionId": "1443434891",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "shannv": {
+      "title": "傻女",
+      "artist": "陈慧娴",
+      "queriedAt": "2026-09-24T16:31:27.687Z",
+      "album": "嫻情",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music128/v4/31/a3/53/31a353d2-fad7-54ea-8b72-2dccc51e474c/00602488963923.rgb.jpg/300x300bb.jpg",
+      "trackId": "1443365784",
+      "collectionId": "1443365267",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "womenhaoxiangzaijianguo": {
+      "title": "我们好像在哪见过",
+      "artist": "杨宗纬 / 叶蓓",
+      "queriedAt": "2026-09-24T16:31:17.704Z",
+      "album": null,
+      "cover": null,
+      "trackId": null,
+      "collectionId": null,
+      "matchStatus": "not_found",
+      "source": null
+    },
+    "xiayizhantianhou": {
+      "title": "下一站天后",
+      "artist": "Twins",
+      "queriedAt": "2026-09-24T16:33:36.669Z",
+      "album": "人人彈起 新曲+精選",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/7a/47/e2/7a47e26e-c9dc-59d4-5789-862cf491be3e/EEG1257V1.jpg/300x300bb.jpg",
+      "trackId": "543651849",
+      "collectionId": "543651299",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "xitieji": {
+      "title": "囍帖街",
+      "artist": "谢安琪",
+      "queriedAt": "2026-09-24T16:31:37.528Z",
+      "album": "Binary",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music118/v4/fd/e7/9f/fde79f61-81b3-c373-a0fe-f739e6aaf2e4/00602517811454.rgb.jpg/300x300bb.jpg",
+      "trackId": "1443655397",
+      "collectionId": "1443655393",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "yehaizi": {
+      "title": "野孩子",
+      "artist": "杨千嬅",
+      "queriedAt": "2026-09-24T16:31:59.338Z",
+      "album": "千嬅盛放",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/fd/1f/80/fd1f8020-a7c9-48ed-9950-ea08439a6b1c/00602527304991.rgb.jpg/300x300bb.jpg",
+      "trackId": "1442767636",
+      "collectionId": "1442767266",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "zhixiangyishengennizou": {
+      "title": "只想一生跟你走",
+      "artist": "张学友",
+      "queriedAt": "2026-09-24T16:33:37.340Z",
+      "album": "傳奇 - 我與你",
+      "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/58/50/d2/5850d2e7-a1c3-1ca6-01c7-6afe8c5cd641/00602498367070.rgb.jpg/300x300bb.jpg",
+      "trackId": "1443311445",
+      "collectionId": "1443311335",
+      "matchStatus": "matched",
+      "source": "itunes"
+    },
+    "zhongwuyan": {
+      "title": "钟无艳",
+      "artist": "谢安琪",
+      "queriedAt": "2026-09-24T16:32:15.528Z",
+      "album": "3/8",
+      "cover": null,
+      "trackId": "f88dc36e-747e-42e2-8713-3612ce723485",
+      "collectionId": "c1e15001-d91b-4f9f-b5d0-1dc84b1bf650",
+      "matchStatus": "review",
+      "source": "musicbrainz",
+      "candidates": [
+        {
+          "title": "钟无艳",
+          "artist": "謝安琪",
+          "album": "3/8",
+          "cover": null,
+          "trackId": "f88dc36e-747e-42e2-8713-3612ce723485",
+          "collectionId": "c1e15001-d91b-4f9f-b5d0-1dc84b1bf650",
+          "source": "musicbrainz",
+          "storefronts": [
+            "mb"
+          ],
+          "score": 10,
+          "titleExact": true,
+          "titleVariant": false,
+          "artistExact": false,
+          "topHit": true
+        }
+      ]
+    }
+  }
+}

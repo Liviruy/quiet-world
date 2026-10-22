@@ -1,0 +1,811 @@
+---
+import { allLocales } from '@/config'
+import { musicTracks } from '@/data/music'
+import { getLangFromLocale, getLangRouteParam } from '@/i18n/lang'
+import { ui } from '@/i18n/ui'
+import Layout from '@/layouts/Layout.astro'
+
+export async function getStaticPaths() {
+  return allLocales.map(lang => ({
+    params: { lang: getLangRouteParam(lang) },
+  }))
+}
+
+const currentLang = getLangFromLocale(Astro.currentLocale)
+const currentUI = ui[currentLang as keyof typeof ui] ?? ui.zh
+const pageSubtitle = currentLang === 'en'
+  ? 'A quiet corner for the songs worth keeping.'
+  : '把值得留住的歌，收进一处安静的角落'
+const labels = currentLang === 'en'
+  ? {
+      region: 'Music library',
+      playlist: 'In this room',
+      play: 'Play',
+      pause: 'Pause',
+      previous: 'Previous track',
+      next: 'Next track',
+      progress: 'Playback progress',
+      loadError: 'This track failed to load',
+    }
+  : {
+      region: '音乐库',
+      playlist: '房间曲目',
+      play: '播放',
+      pause: '暂停',
+      previous: '上一首',
+      next: '下一首',
+      progress: '播放进度',
+      loadError: '这首曲目加载失败',
+    }
+---
+
+<Layout>
+  <div class="uno-decorative-line" />
+
+  <div class="music-page">
+    <h1 class="music-page-title">{currentUI.music}</h1>
+    <p class="music-page-subtitle">{pageSubtitle}</p>
+
+    <div class="ml-room">
+      <div class="ml-glow ml-glow-a" aria-hidden="true" />
+      <div class="ml-glow ml-glow-b" aria-hidden="true" />
+
+      <section
+        class="music-library"
+        role="region"
+        aria-label={labels.region}
+        data-tracks={JSON.stringify(musicTracks)}
+        data-label-play={labels.play}
+        data-label-pause={labels.pause}
+        data-label-previous={labels.previous}
+        data-label-next={labels.next}
+        data-label-progress={labels.progress}
+        data-label-error={labels.loadError}
+      >
+        <div class="ml-hero">
+          <div class="ml-cover" aria-hidden="true">
+            <span class="ml-cover-char">{musicTracks[0]?.title.charAt(0) ?? ''}</span>
+          </div>
+          <h2 class="ml-title">{musicTracks[0]?.title}</h2>
+          <p class="ml-artist">{musicTracks[0]?.artist}</p>
+        </div>
+
+        <div class="ml-transport">
+          <div class="ml-times">
+            <span class="ml-current">0:00</span>
+            <span class="ml-total">{musicTracks.length > 0 ? '0:00' : ''}</span>
+          </div>
+          <button class="ml-progress" type="button" aria-label={labels.progress} aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <span class="ml-progress-fill" />
+          </button>
+          <div class="ml-buttons">
+            <button class="ml-btn ml-prev" type="button" aria-label={labels.previous}>
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                <path d="M7 5.5v13M19 6.2a1 1 0 0 0-1.55-.83l-8.2 6.3a1 1 0 0 0 0 1.66l8.2 6.3A1 1 0 0 0 19 18.8Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+            <button class="ml-btn ml-play" type="button" aria-label={labels.play}>
+              <svg class="ml-icon-play" viewBox="0 0 24 24" width="19" height="19" aria-hidden="true">
+                <path d="M8.2 5.6a1 1 0 0 1 1.52-.85l9 5.55a1 1 0 0 1 0 1.7l-9 5.55a1 1 0 0 1-1.52-.85Z" fill="currentColor" />
+              </svg>
+              <svg class="ml-icon-pause" viewBox="0 0 24 24" width="19" height="19" aria-hidden="true">
+                <path d="M8.5 5.5h2.2v13H8.5zM13.3 5.5h2.2v13h-2.2z" fill="currentColor" />
+              </svg>
+            </button>
+            <button class="ml-btn ml-next" type="button" aria-label={labels.next}>
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                <path d="M17 5.5v13M5 6.2a1 1 0 0 1 1.55-.83l8.2 6.3a1 1 0 0 1 0 1.66l-8.2 6.3A1 1 0 0 1 5 18.8Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <h3 class="ml-section-title">{labels.playlist}</h3>
+        <ol class="ml-playlist">
+          {
+            musicTracks.map((track, i) => (
+              <li>
+                <button class="ml-row" type="button" data-index={i}>
+                  <span class="ml-row-index">
+                    <span class="ml-row-num">{i + 1}</span>
+                    <span class="ml-row-play" aria-hidden="true" />
+                    <span class="ml-row-eq" aria-hidden="true">
+                      <span /><span /><span />
+                    </span>
+                  </span>
+                  <span class="ml-row-art" aria-hidden="true">{track.title.charAt(0)}</span>
+                  <span class="ml-row-main">
+                    <span class="ml-row-title">{track.title}</span>
+                    <span class="ml-row-artist">{track.artist}</span>
+                  </span>
+                </button>
+              </li>
+            ))
+          }
+        </ol>
+      </section>
+    </div>
+  </div>
+</Layout>
+
+<style is:global>
+  /* Apple Music "room" look: immersive glow, centred artwork, red key color,
+     54px list rows. Tokens sampled live from music.apple.com web. */
+  .music-page {
+    --ml-accent: #d60017;
+    --ml-accent-hover: #a20000;
+    --ml-ink: oklch(var(--un-preset-theme-colors-primary));
+    --ml-ink-soft: oklch(var(--un-preset-theme-colors-secondary) / 0.62);
+    --ml-hairline: oklch(var(--un-preset-theme-colors-secondary) / 0.14);
+    --ml-font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Hiragino Sans GB', 'Segoe UI', system-ui, sans-serif;
+    position: relative;
+    z-index: 1;
+    padding-bottom: 3rem;
+  }
+
+  html.dark .music-page {
+    --ml-accent: #ff453a;
+    --ml-accent-hover: #ff6961;
+    --ml-hairline: oklch(var(--un-preset-theme-colors-secondary) / 0.22);
+  }
+
+  .music-page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+    letter-spacing: 0.04em;
+    background: linear-gradient(to right, var(--theme-primary), oklch(from var(--theme-primary) l c h / 0.7));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .music-page-subtitle {
+    font-size: 0.925rem;
+    margin-bottom: 2.5rem;
+    opacity: 0.6;
+    color: var(--theme-secondary);
+  }
+
+  /* ── Immersive room backdrop ── */
+  .ml-room {
+    position: relative;
+  }
+
+  .ml-glow {
+    position: absolute;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .ml-glow-a {
+    inset: -4rem -6rem auto;
+    height: 26rem;
+    background: radial-gradient(60% 70% at 50% 35%, oklch(from var(--ml-accent) l c h / 0.16), transparent 70%);
+  }
+
+  .ml-glow-b {
+    inset: 2rem -30% auto;
+    height: 24rem;
+    background: radial-gradient(55% 65% at 20% 45%, oklch(var(--un-preset-theme-colors-primary) / 0.14), transparent 70%);
+  }
+
+  .music-library {
+    position: relative;
+    z-index: 1;
+    font-family: var(--ml-font);
+  }
+
+  /* ── Hero: centred artwork + identity ── */
+  .ml-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 1.75rem;
+  }
+
+  .ml-cover {
+    display: grid;
+    place-items: center;
+    width: 13.5rem;
+    height: 13.5rem;
+    margin-bottom: 1.4rem;
+    border-radius: 1.4rem;
+    background:
+      radial-gradient(circle at 30% 25%, oklch(from var(--ml-accent) calc(l + 0.14) c h / 0.85), transparent 62%),
+      linear-gradient(140deg, oklch(from var(--ml-accent) calc(l + 0.04) c h), oklch(from var(--un-preset-theme-colors-primary) l c h));
+    box-shadow:
+      0 1.6rem 3.2rem oklch(var(--un-preset-theme-colors-secondary) / 0.28),
+      0 0.2rem 0.6rem oklch(var(--un-preset-theme-colors-secondary) / 0.18);
+  }
+
+  .ml-cover-char {
+    font-size: 4.25rem;
+    font-weight: 700;
+    line-height: 1;
+    color: oklch(1 0 0 / 0.94);
+    text-shadow: 0 0.15rem 0.6rem oklch(0 0 0 / 0.28);
+    user-select: none;
+  }
+
+  .ml-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0 0 0.25rem;
+    color: var(--ml-ink);
+    overflow-wrap: anywhere;
+  }
+
+  .ml-artist {
+    font-size: 0.95rem;
+    margin: 0;
+    color: var(--ml-ink-soft);
+  }
+
+  /* ── Transport: scrubber + round buttons ── */
+  .ml-transport {
+    max-width: 30rem;
+    margin: 0 auto 0.5rem;
+  }
+
+  .ml-times {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ml-ink-soft);
+    margin-bottom: 0.3rem;
+  }
+
+  .ml-progress {
+    display: block;
+    width: 100%;
+    height: 0.5rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+  }
+
+  .ml-progress::before {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 3px;
+    border-radius: 999px;
+    background: var(--ml-hairline);
+  }
+
+  .ml-progress-fill {
+    display: block;
+    width: 100%;
+    height: 3px;
+    margin-top: -3px;
+    border-radius: 999px;
+    background: var(--ml-accent);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 100ms linear;
+  }
+
+  .music-library.is-seeking .ml-progress-fill {
+    transition: none;
+  }
+
+  .ml-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.75rem;
+    margin-top: 0.9rem;
+  }
+
+  .ml-btn {
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--ml-ink);
+    cursor: pointer;
+    transition: color 140ms ease, transform 140ms ease, background-color 140ms ease;
+  }
+
+  .ml-btn:hover,
+  .ml-btn:focus-visible {
+    color: var(--ml-accent);
+  }
+
+  .ml-btn:active {
+    transform: scale(0.92);
+  }
+
+  .ml-btn:focus-visible {
+    outline: 1px solid oklch(from var(--ml-accent) l c h / 0.6);
+    outline-offset: 3px;
+  }
+
+  .ml-prev,
+  .ml-next {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .ml-play {
+    width: 3.4rem;
+    height: 3.4rem;
+    background: var(--ml-accent);
+    color: oklch(1 0 0 / 0.98);
+    box-shadow: 0 0.7rem 1.6rem oklch(from var(--ml-accent) l c h / 0.42);
+  }
+
+  .ml-play:hover,
+  .ml-play:focus-visible {
+    background: var(--ml-accent-hover);
+    color: oklch(1 0 0 / 0.98);
+  }
+
+  .ml-icon-play {
+    transform: translateX(1px);
+  }
+
+  .ml-icon-pause {
+    display: none;
+  }
+
+  .music-library.is-playing .ml-icon-play {
+    display: none;
+  }
+
+  .music-library.is-playing .ml-icon-pause {
+    display: block;
+  }
+
+  .music-library.is-error .ml-current {
+    color: var(--ml-accent);
+  }
+
+  /* ── Room track list ── */
+  .ml-section-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--ml-ink);
+    margin: 2.25rem 0 0.35rem;
+  }
+
+  .ml-playlist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .ml-row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    width: 100%;
+    height: 54px;
+    padding: 0 0.6rem;
+    border: 0;
+    border-radius: 0.7rem;
+    background: transparent;
+    color: var(--ml-ink);
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    transition: background-color 140ms ease;
+  }
+
+  @media (hover: hover) {
+    .ml-row:hover {
+      background: oklch(var(--un-preset-theme-colors-secondary) / 0.06);
+    }
+
+    html.dark .ml-row:hover {
+      background: oklch(var(--un-preset-theme-colors-secondary) / 0.1);
+    }
+
+    .ml-row:hover .ml-row-num {
+      visibility: hidden;
+    }
+
+    .ml-row:hover .ml-row-play {
+      opacity: 1;
+    }
+  }
+
+  .ml-row:focus-visible {
+    outline: 1px solid oklch(from var(--ml-accent) l c h / 0.6);
+    outline-offset: -1px;
+  }
+
+  .ml-row-index {
+    position: relative;
+    flex: 0 0 1.5rem;
+    display: grid;
+    place-items: center;
+    height: 1.5rem;
+  }
+
+  .ml-row-num {
+    font-size: 0.82rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ml-ink-soft);
+  }
+
+  .ml-row-play {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    opacity: 0;
+    transition: opacity 120ms ease;
+  }
+
+  .ml-row-play::before {
+    content: '';
+    border-style: solid;
+    border-width: 5px 0 5px 8px;
+    border-color: transparent transparent transparent currentColor;
+    color: var(--ml-ink);
+  }
+
+  .ml-row-eq {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 2px;
+    height: 0.85rem;
+    margin: auto 0;
+  }
+
+  .ml-row-eq span {
+    width: 2.5px;
+    border-radius: 1px;
+    background: var(--ml-accent);
+    transform: scaleY(0.4);
+  }
+
+  .ml-row-eq span:nth-child(1) { height: 45%; }
+  .ml-row-eq span:nth-child(2) { height: 85%; }
+  .ml-row-eq span:nth-child(3) { height: 60%; }
+
+  .ml-row.is-active .ml-row-num,
+  .ml-row.is-active .ml-row-play {
+    display: none;
+  }
+
+  .ml-row.is-active .ml-row-eq {
+    display: flex;
+  }
+
+  .ml-row.is-active.is-playing-row .ml-row-eq span {
+    animation: ml-eq-bounce 1s ease-in-out infinite;
+  }
+
+  .ml-row.is-active.is-playing-row .ml-row-eq span:nth-child(1) { animation-delay: -0.4s; }
+  .ml-row.is-active.is-playing-row .ml-row-eq span:nth-child(2) { animation-delay: -0.1s; }
+  .ml-row.is-active.is-playing-row .ml-row-eq span:nth-child(3) { animation-delay: -0.65s; }
+
+  .ml-row-art {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.35rem;
+    background: linear-gradient(140deg, oklch(from var(--ml-accent) calc(l + 0.04) c h), oklch(from var(--un-preset-theme-colors-primary) l c h));
+    color: oklch(1 0 0 / 0.94);
+    font-size: 0.95rem;
+    font-weight: 700;
+    user-select: none;
+  }
+
+  .ml-row-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 0.1rem;
+  }
+
+  .ml-row-title {
+    font-size: 0.92rem;
+    font-weight: 400;
+    line-height: 1.3;
+    color: var(--ml-ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ml-row.is-active .ml-row-title {
+    color: var(--ml-accent);
+    font-weight: 500;
+  }
+
+  .ml-row-artist {
+    font-size: 0.78rem;
+    line-height: 1.3;
+    color: var(--ml-ink-soft);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  @keyframes ml-eq-bounce {
+    0%, 100% { transform: scaleY(0.4); }
+    50% { transform: scaleY(1); }
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .music-page-title {
+      font-size: 1.5rem;
+    }
+
+    .ml-cover {
+      width: 11rem;
+      height: 11rem;
+      border-radius: 1.1rem;
+    }
+
+    .ml-cover-char {
+      font-size: 3.4rem;
+    }
+
+    .ml-title {
+      font-size: 1.25rem;
+    }
+
+    .ml-buttons {
+      gap: 1.25rem;
+    }
+  }
+
+  /* ── Reduced motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    .ml-btn,
+    .ml-progress-fill,
+    .ml-row,
+    .ml-row-play {
+      transition: none;
+    }
+
+    .ml-row.is-active.is-playing-row .ml-row-eq span {
+      animation: none;
+      transform: scaleY(1);
+    }
+  }
+</style>
+
+<script is:inline data-astro-rerun>
+(function () {
+  // The Howl lives in the site-wide MusicEngine singleton so playback started
+  // from the nav button continues here (and vice versa). This controller only
+  // renders engine state and forwards user intent to it; it survives
+  // ClientRouter swaps through init()/cleanup() DOM re-binding.
+  const existing = window.__musicLibraryController
+  if (existing) {
+    existing.init()
+    return
+  }
+
+  let root = null
+  let els = {}
+  let tracks = []
+  let seeking = false
+  let timer = null
+
+  function formatTime(seconds) {
+    if (!Number.isFinite(seconds) || seconds < 0) {
+      return '0:00'
+    }
+    const minutes = Math.floor(seconds / 60)
+    const rest = Math.floor(seconds % 60)
+    return `${minutes}:${String(rest).padStart(2, '0')}`
+  }
+
+  function update() {
+    const e = window.__quietMusic
+    if (!root || !e) {
+      return
+    }
+    const playing = e.isPlaying()
+    const failed = e.isFailed()
+    const duration = e.duration()
+    const current = e.current()
+    const progress = duration > 0 ? current / duration : 0
+    const index = e.index()
+    root.classList.toggle('is-playing', playing)
+    root.classList.toggle('is-error', failed)
+    root.classList.toggle('is-seeking', seeking)
+    els.play.setAttribute('aria-label', playing
+      ? root.dataset.labelPause || ''
+      : root.dataset.labelPlay || '')
+    els.current.textContent = failed ? root.dataset.labelError || '' : formatTime(current)
+    els.total.textContent = formatTime(duration)
+    els.fill.style.transform = `scaleX(${progress})`
+    els.progress.setAttribute('aria-valuenow', String(Math.round(progress * 100)))
+    els.progress.setAttribute('aria-valuetext', `${formatTime(current)} / ${formatTime(duration)}`)
+    els.rows.forEach((row, i) => {
+      row.classList.toggle('is-active', i === index)
+      row.classList.toggle('is-playing-row', i === index && playing)
+    })
+  }
+
+  function startTimer() {
+    stopTimer()
+    timer = setInterval(() => {
+      if (!seeking) {
+        update()
+      }
+    }, 250)
+  }
+
+  function stopTimer() {
+    if (timer) {
+      clearInterval(timer)
+      timer = null
+    }
+  }
+
+  function renderNowPlaying() {
+    const e = window.__quietMusic
+    const track = e ? tracks[e.index()] : tracks[0]
+    if (!track || !root) {
+      return
+    }
+    els.title.textContent = track.title
+    els.artist.textContent = track.artist
+    els.coverChar.textContent = (track.title || '').trim().charAt(0) || '♪'
+  }
+
+  function handleStateChange() {
+    if (!root) {
+      return
+    }
+    const e = window.__quietMusic
+    if (e && e.isPlaying()) {
+      startTimer()
+    }
+    else {
+      stopTimer()
+    }
+    renderNowPlaying()
+    update()
+  }
+
+  function startTrack(nextIndex) {
+    const e = window.__quietMusic
+    if (e) {
+      e.playTrack(nextIndex)
+    }
+  }
+
+  function togglePlay() {
+    const e = window.__quietMusic
+    if (e) {
+      e.toggle()
+    }
+  }
+
+  function seekFromClientX(clientX) {
+    const e = window.__quietMusic
+    const duration = e ? e.duration() : 0
+    if (!e || duration <= 0) {
+      return
+    }
+    const rect = els.progress.getBoundingClientRect()
+    const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+    e.seekTo(percent * duration)
+    update()
+  }
+
+  function bind() {
+    els = {
+      title: root.querySelector('.ml-title'),
+      artist: root.querySelector('.ml-artist'),
+      coverChar: root.querySelector('.ml-cover-char'),
+      current: root.querySelector('.ml-current'),
+      total: root.querySelector('.ml-total'),
+      progress: root.querySelector('.ml-progress'),
+      fill: root.querySelector('.ml-progress-fill'),
+      play: root.querySelector('.ml-play'),
+      prev: root.querySelector('.ml-prev'),
+      next: root.querySelector('.ml-next'),
+      rows: Array.prototype.slice.call(root.querySelectorAll('.ml-row')),
+    }
+
+    els.play.addEventListener('click', togglePlay)
+    els.prev.addEventListener('click', () => {
+      const e = window.__quietMusic
+      startTrack((e ? e.index() : 0) - 1)
+    })
+    els.next.addEventListener('click', () => {
+      const e = window.__quietMusic
+      startTrack((e ? e.index() : 0) + 1)
+    })
+    els.rows.forEach((row, i) => {
+      row.addEventListener('click', () => {
+        const e = window.__quietMusic
+        if (e && i === e.index() && !e.isFailed()) {
+          togglePlay()
+          return
+        }
+        startTrack(i)
+      })
+    })
+
+    els.progress.addEventListener('click', (event) => {
+      if (!seeking) {
+        seekFromClientX(event.clientX)
+      }
+    })
+    els.progress.addEventListener('pointerdown', (event) => {
+      const e = window.__quietMusic
+      if (!e || e.duration() <= 0) {
+        return
+      }
+      seeking = true
+      if (els.progress.setPointerCapture) {
+        els.progress.setPointerCapture(event.pointerId)
+      }
+      seekFromClientX(event.clientX)
+      event.preventDefault()
+    })
+    els.progress.addEventListener('pointermove', (event) => {
+      if (seeking) {
+        seekFromClientX(event.clientX)
+        event.preventDefault()
+      }
+    })
+    const finishSeeking = function (event) {
+      if (!seeking) {
+        return
+      }
+      seekFromClientX(event.clientX)
+      seeking = false
+      if (els.progress.releasePointerCapture) {
+        els.progress.releasePointerCapture(event.pointerId)
+      }
+      update()
+    }
+    els.progress.addEventListener('pointerup', finishSeeking)
+    els.progress.addEventListener('pointercancel', finishSeeking)
+  }
+
+  function init() {
+    const next = document.querySelector('.music-library')
+    if (!next) {
+      return
+    }
+    if (next !== root) {
+      root = next
+      tracks = JSON.parse(root.dataset.tracks || '[]')
+      bind()
+    }
+    handleStateChange()
+  }
+
+  function cleanup() {
+    // Only the DOM goes away on a swap — the engine keeps playing and init()
+    // rebinds when the page comes back.
+    stopTimer()
+    root = null
+    els = {}
+  }
+
+  window.__musicLibraryController = { init, cleanup }
+  document.addEventListener('astro:page-load', init)
+  document.addEventListener('astro:before-swap', cleanup)
+  document.addEventListener('quiet-music-change', handleStateChange)
+  init()
+})()
+</script>

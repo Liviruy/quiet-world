@@ -1,0 +1,14 @@
+shellEmulator: true
+
+# Skip the automatic dependency re-install check before `pnpm run`/`pnpm exec`.
+# node_modules is pinned and complete; the check re-contacts the registry and
+# fails the whole command on flaky networks. Real installs still run the
+# trustPolicy supply-chain verification below.
+verifyDepsBeforeRun: false
+
+trustPolicy: no-downgrade
+
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - simple-git-hooks

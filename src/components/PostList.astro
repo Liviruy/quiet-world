@@ -1,0 +1,90 @@
+---
+import type { Language } from '@/i18n/config'
+import type { Post } from '@/types'
+import PinIcon from '@/assets/icons/pin-icon.svg'
+import PostDate from '@/components/PostDate.astro'
+import { getPostPath } from '@/i18n/path'
+import { getPostDescription } from '@/utils/description'
+import { isHomePage } from '@/utils/page'
+
+export interface Props {
+  posts: Post[]
+  lang: Language
+  pinnedIds?: Set<string>
+}
+
+const { posts, lang, pinnedIds } = Astro.props
+const isHome = isHomePage(Astro.url.pathname)
+---
+
+<ul>
+  {posts.map((post, idx) => {
+    const slug = post.data.abbrlink || post.id
+
+    return (
+      <>
+        {idx > 0 && isHome && (
+          <li class:list={[isHome ? 'lg:mt-10' : '', 'mt-5.5']}>
+            <div class="uno-decorative-line" />
+          </li>
+        )}
+        <li
+          class:list={[
+            idx > 0 ? (isHome ? 'lg:mt-4' : 'mt-2') : '',
+            isHome ? 'home-post-item' : '',
+          ]}
+        >
+        {/* post title */}
+        <h3 class:list={['inline transition-colors hover:c-primary', isHome ? 'home-post-title' : '']}>
+          <a
+            class:list={[
+              'cjk:tracking-wide',
+              isHome ? 'lg:font-medium lg:text-4.5' : '',
+            ]}
+            href={getPostPath(slug, lang)}
+            data-astro-prefetch="viewport"
+          >
+            {post.data.title}
+          </a>
+          {/* pinned icon */}
+          {pinnedIds?.has(slug) && (
+            <PinIcon
+              aria-hidden="true"
+              class="ml-0.25em inline-block aspect-square w-0.98em translate-y--0.1em lg:(w-1.05em translate-y--0.15em)"
+              fill="currentColor"
+            />
+          )}
+        </h3>
+
+        {/* mobile post time */}
+        <div
+          class:list={['py-0.8 text-3.5 font-time lg:hidden', isHome ? 'home-post-meta' : '']}
+        >
+          <PostDate
+            date={post.data.published}
+            minutes={post.remarkPluginFrontmatter.minutes}
+          />
+        </div>
+
+        {/* desktop post time */}
+        <div class:list={['hidden text-3.65 font-time lg:(ml-2.5 inline)', isHome ? 'home-post-meta' : '']}>
+          <PostDate
+            date={post.data.published}
+            minutes={post.remarkPluginFrontmatter.minutes}
+          />
+        </div>
+
+        {/* desktop post description */}
+        {isHome && (
+          <div
+            class:list={['heti hidden', isHome ? 'home-post-summary' : '']}
+            lg="mt-2.25 block"
+          >
+            <p>{getPostDescription(post, 'list')}</p>
+          </div>
+        )}
+      </li>
+      </>
+    )
+  })}
+</ul>
