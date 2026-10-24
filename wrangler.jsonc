@@ -16,6 +16,10 @@
     {
       "pattern": "lwjxnp.eu.cc",
       "custom_domain": true
+    },
+    {
+      "pattern": "www.lwjxnp.eu.cc",
+      "custom_domain": true
     }
   ],
   "assets": {
