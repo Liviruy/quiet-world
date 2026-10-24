@@ -12,14 +12,6 @@
     {
       "pattern": "www.artist.cc.cd",
       "custom_domain": true
-    },
-    {
-      "pattern": "lwjxnp.eu.cc",
-      "custom_domain": true
-    },
-    {
-      "pattern": "www.lwjxnp.eu.cc",
-      "custom_domain": true
     }
   ],
   "assets": {

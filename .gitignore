@@ -51,6 +51,9 @@ pnpm-debug.log*
 # Wrangler local state (deploy cache + simulated D1/R2 bindings on this machine)
 .wrangler/
 
+# Local deploy config with personal alias domains (never publish)
+/wrangler.private.jsonc
+
 # Scratch area for font originals too large to commit (the 25 MB LXGW TTF).
 # Everything scripts/subset-fonts.ts actually reads is committed under
 # src/assets/fonts-full/ instead, so subsets can always be rebuilt.
