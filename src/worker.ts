@@ -141,14 +141,10 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url)
 
-    // The primary zone redirects HTTP before the Worker, but a newly attached
-    // custom domain may not. Keep both domains on HTTPS without breaking the
-    // local wrangler dev server (127.0.0.1 / localhost).
-    if (url.protocol === 'http:' && url.hostname !== '127.0.0.1' && url.hostname !== 'localhost') {
-      url.protocol = 'https:'
-      return Response.redirect(url.toString(), 301)
-    }
-
+    // HTML is served directly by Workers Assets, so an HTTP→HTTPS redirect
+    // here would only cover /media requests. Use the zone's Always Use HTTPS
+    // setting instead (the primary zone already has it; enable it for the
+    // secondary zone in the Cloudflare dashboard).
     if (url.pathname.startsWith('/media/thumb/')) {
       const sourcePath = getSourcePath(url.pathname, '/media/thumb/')
       if (!sourcePath)
