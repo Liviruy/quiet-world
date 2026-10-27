@@ -2,11 +2,11 @@
 
 > 觅一处安静角落。
 
-这是 [Quiet World](https://artist.cc.cd) 的源代码。一个以文字、摄影和音乐为主的个人博客，中文为主，同时保留英文页面。
+这是 [Quiet World](https://artist.cc.cd) 的源代码。一个以文字、随拍和音乐为主的个人博客，中文为主，同时保留英文页面。
 
 ## 关于本站
 
-- 文章、游记、摄影和关于页各自独立，不做统一的信息流。
+- 文章、随记、随拍和关于页各自独立，不做统一的信息流。
 - 中文和英文页面使用同一套排版，但字体按实际内容子集化，避免整站下载大字体。
 - 图片通过 R2 提供，页面端按视口选择合适宽度；相册缩图优先命中预生成版本。
 - 评论使用 Twikoo；播放器、歌词和封面在首次打开音乐面板时才加载。
@@ -48,7 +48,7 @@ pnpm exec astro check
 - 文章：`src/content/posts/`，文件名必须以 `-zh.md` 或 `-en.md` 结尾；文章按日期倒序展示，`abbrlink` 可指定固定链接。
 - 关于页：`src/content/about/`。
 - 站点配置：`src/config.ts`，包括站点信息、默认配色、字体、评论等。
-- 游记与摄影数据：`src/data/albums.ts`、`src/data/photos.ts`。
+- 随记与随拍数据：`src/data/albums.ts`、`src/data/photos.ts`。
 - 音乐曲目：`src/config/music.ts`；封面注册表是 `src/data/music-covers.json`。
 - 页面布局：`src/components/`、`src/layouts/`、`src/pages/`。
 
@@ -61,7 +61,7 @@ pnpm subset-fonts
 字体、封面或照片有变化时，按需运行 R2 相关脚本。需要设置 `CLOUDFLARE_ACCOUNT_ID`、`R2_BUCKET`，以及 `CLOUDFLARE_API_TOKEN`（或本机 `wrangler` 登录态）：
 
 ```bash
-pnpm r2-thumbnails      # 预生成相册/摄影缩图
+pnpm r2-thumbnails      # 预生成随记/随拍缩图
 pnpm r2-music-covers    # 镜像音乐封面
 ```
 
@@ -82,7 +82,7 @@ pnpm dlx wrangler@4 deploy
 src/
   components/   页面组件、播放器、灯箱、评论等
   content/      文章与关于页的 Markdown
-  data/         游记、摄影、音乐及封面数据
+  data/         随记、随拍、音乐及封面数据
   i18n/         中英文文案与路径
   layouts/      Head、Layout
   pages/        静态路由
@@ -90,6 +90,7 @@ src/
   worker.ts     图片 Worker
 scripts/        构建后处理、字体子集、R2 工具
 public/         字体、图标、音效和静态图片
+docs/           性能基线；本地编辑指南与旧方案归档（本地文件不入库）
 ```
 
 ## 致谢

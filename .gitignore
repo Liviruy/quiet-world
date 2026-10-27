@@ -43,10 +43,12 @@ pnpm-debug.log*
 # Local launcher / personal notes
 /启动博客服务器.bat
 /一键部署.bat
-/R2-D1使用指南.md
-/R2图床搭建指南.md
-/Retypeset使用指南.md
-/内容编辑指南.md
+
+# Local documentation. Only the tracked performance baseline is published;
+# everything else under docs/archive/ is personal or historical.
+/docs/README.md
+/docs/内容编辑指南.md
+/docs/archive/
 
 # Wrangler local state (deploy cache + simulated D1/R2 bindings on this machine)
 .wrangler/
