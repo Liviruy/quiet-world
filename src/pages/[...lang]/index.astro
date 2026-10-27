@@ -59,11 +59,28 @@ const pinnedIds = new Set(
     white-space: nowrap;
   }
 
+  /* The homepage no longer loads markdown.css: keep only the few .heti
+     rules its summary paragraph actually used. */
   .home-page .home-post-summary {
     max-width: 67ch;
     color: oklch(var(--un-preset-theme-colors-secondary) / 0.86);
     line-height: 1.75;
     text-wrap: pretty;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+
+  html:lang(zh) .home-page .home-post-summary {
+    letter-spacing: 0.02em;
+  }
+
+  .home-page .home-post-summary p {
+    margin-bottom: 1rem;
+    text-wrap: pretty;
+  }
+
+  html:lang(zh) .home-page .home-post-summary p {
+    text-align: justify;
   }
 
   @media (max-width: 1023px) {
