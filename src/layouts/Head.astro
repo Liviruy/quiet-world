@@ -51,7 +51,7 @@ const criticalFontPreloads = currentLang === 'en'
       ...(needsDateFont ? [`fonts/Snell-Bold-SF.woff2?${displayFontVersion}`] : []),
     ]
   : [
-      'fonts/EarlySummer-Chrome.woff2',
+      'fonts/EarlySummer-Chrome.woff2?v=20261027',
       ...(isNotFound ? [`fonts/STIX-Italic-VF.woff2?${displayFontVersion}`] : []),
       ...(needsDateFont ? [`fonts/Snell-Bold-SF.woff2?${displayFontVersion}`] : []),
     ]
@@ -61,7 +61,7 @@ const criticalFontPreloads = currentLang === 'en'
 // their short .detail-description, so preload that instead. Both keep the
 // correct face on first paint; see scripts/subset-fonts.ts.
 const bodyFontPreload = currentLang === 'zh' && isPost
-  ? ['fonts/lxgw-wenkai-body-400.woff2?v=20260925e']
+  ? ['fonts/lxgw-wenkai-body-400.woff2?v=20261027a']
   : []
 const albumFontPreload = currentLang === 'zh' && isAlbumsDetail
   ? ['fonts/lxgw-wenkai-album-400.woff2?v=20261021']

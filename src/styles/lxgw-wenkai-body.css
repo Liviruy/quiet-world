@@ -14,7 +14,7 @@
   font-style: normal;
   font-display: swap;
   font-weight: 400;
-  src: url('/fonts/lxgw-wenkai-body-400.woff2?v=20260925e') format('woff2');
+  src: url('/fonts/lxgw-wenkai-body-400.woff2?v=20261027a') format('woff2');
 }
 
 /* The article face is injected per post by scripts/subset-post-fonts.ts; this

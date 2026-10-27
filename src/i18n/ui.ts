@@ -25,8 +25,8 @@ export const ui: Record<Language, Translation> = {
     subtitle: '觅一处安静角落',
     posts: '文章',
     about: '关于',
-    travelog: '游记',
-    gallery: '摄影',
+    travelog: '随记',
+    gallery: '随拍',
     toc: '目录',
   },
 }

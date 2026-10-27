@@ -146,7 +146,7 @@ const renderedPhotosets = photosets.map(set => ({
     font-weight: 700;
     margin-bottom: 0.35rem;
     letter-spacing: 0.04em;
-    background: linear-gradient(to right, var(--theme-primary), oklch(from var(--theme-primary) l c h / 0.7));
+    background: linear-gradient(to right, oklch(var(--un-preset-theme-colors-primary)), oklch(var(--un-preset-theme-colors-primary) / 0.7));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -237,7 +237,7 @@ const renderedPhotosets = photosets.map(set => ({
     font-weight: 600;
     margin-top: 0.125rem;
     margin-bottom: 0.25rem;
-    color: var(--theme-primary);
+    color: oklch(var(--un-preset-theme-colors-primary));
   }
 
   .timeline-desc {
@@ -595,7 +595,7 @@ const renderedPhotosets = photosets.map(set => ({
   .lightbox-card-title {
     font-size: 1.125rem;
     font-weight: 600;
-    color: var(--theme-primary);
+    color: oklch(var(--un-preset-theme-colors-primary));
     margin: 0;
   }
 

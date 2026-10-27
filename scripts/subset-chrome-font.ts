@@ -18,8 +18,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 
-// 站名"清静世界"、副标题"觅一处安静角落"、导航"文章/关于/游记/摄影"里由 EarlySummer 出字形码点。
-const CHROME_CHARS = '于关文章觅摄静世落游影清界角安记处一'
+// 站名“清静世界”、副标题“觅一处安静角落”、导航“文章/随记/随拍/关于”里
+// 由 EarlySummer 出字形的码点。改站名或导航文案时，必须同步这里和 font.css
+// 的 unicode-range，否则新字会静默掉回系统字体。
+const CHROME_CHARS = '于关文章觅随静世落记清界角安处一拍'
 
 const sourceArg = process.argv[2]
 if (!sourceArg) {
